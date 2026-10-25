@@ -132,28 +132,28 @@
     <div class="grid">
       <div class="card t-comp">
         <h3>Levantar y bajar</h3>
-        <div class="cmd"><pre><code>docker compose up</code></pre><div class="what">Construye (si hace falta), crea y arranca todo. Logs en la terminal.</div></div>
-        <div class="cmd"><pre><code>docker compose up -d</code></pre><div class="what">En segundo plano.</div></div>
+        <div class="cmd"><pre><code>docker compose up</code></pre><div class="what">Lee el <code>docker-compose.yml</code> y levanta todo el proyecto: construye las imágenes que tengan <code>build:</code> (solo si no existen todavía), crea la red, los volúmenes y los contenedores, y los arranca. La terminal queda mostrando los logs de todos los servicios mezclados; <kbd>Ctrl</kbd>+<kbd>C</kbd> los detiene.</div></div>
+        <div class="cmd"><pre><code>docker compose up -d</code></pre><div class="what">Lo mismo, en segundo plano (<i>detached</i>): te devuelve la terminal y los servicios siguen corriendo. Los logs se ven con <code>docker compose logs</code>.</div></div>
         <div class="cmd"><pre><code>docker compose up --build</code></pre><div class="what"><b>Fuerza el rebuild</b> de las imágenes (cuando cambiaste el Dockerfile o el código en prod).</div></div>
-        <div class="cmd"><pre><code>docker compose down</code></pre><div class="what">Detiene y <b>borra</b> contenedores y red. Los volúmenes quedan.</div></div>
-        <div class="cmd"><pre><code>docker compose down -v</code></pre><div class="what">Además borra los volúmenes (<b>se pierden los datos de la DB</b>).</div></div>
+        <div class="cmd"><pre><code>docker compose down</code></pre><div class="what">Detiene y <b>borra</b> los contenedores y la red que creó el proyecto. Los volúmenes (y por lo tanto los datos de la base) se conservan, así que el próximo <code>up</code> los encuentra. Las imágenes tampoco se borran.</div></div>
+        <div class="cmd"><pre><code>docker compose down -v</code></pre><div class="what">Además borra los volúmenes del proyecto: <b>se pierden los datos de la base de datos</b>. Útil para empezar de cero, por ejemplo si cambiaste el usuario de Mongo y necesitás que se vuelva a crear.</div></div>
       </div>
       <div class="card t-comp">
         <h3>Usar otro archivo</h3>
-        <div class="cmd"><pre><code>docker compose -f docker-compose-dev.yml up</code></pre><div class="what">Compose custom: <code>-f</code> va <b>antes</b> de <code>up</code>.</div></div>
-        <div class="cmd"><pre><code>docker compose -f docker-compose-dev.yml down</code></pre><div class="what">Para bajarlo usá el mismo <code>-f</code>.</div></div>
-        <div class="cmd"><pre><code>docker compose -f docker-compose.yml -f docker-compose.override.yml up</code></pre><div class="what">Combinar archivos (el segundo pisa al primero).</div></div>
-        <div class="cmd"><pre><code>docker compose config</code></pre><div class="what">Muestra el YAML final resuelto (con variables). Ideal para detectar errores.</div></div>
+        <div class="cmd"><pre><code>docker compose -f docker-compose-dev.yml up</code></pre><div class="what"><code>-f</code> elige un archivo que no se llama <code>docker-compose.yml</code>. Va <b>antes</b> del subcomando (<code>up</code>), porque es una opción de <code>compose</code>, no de <code>up</code>.</div></div>
+        <div class="cmd"><pre><code>docker compose -f docker-compose-dev.yml down</code></pre><div class="what">Para bajar ese proyecto usá el mismo <code>-f</code>: sin él, Compose busca <code>docker-compose.yml</code> y no encuentra lo que levantaste.</div></div>
+        <div class="cmd"><pre><code>docker compose -f docker-compose.yml -f docker-compose.override.yml up</code></pre><div class="what">Combina dos archivos: el primero es la base y el segundo agrega o reemplaza claves (por ejemplo, otro puerto o un volumen de código para desarrollo). Si existe un archivo llamado <code>docker-compose.override.yml</code>, <code>docker compose up</code> lo combina solo.</div></div>
+        <div class="cmd"><pre><code>docker compose config</code></pre><div class="what">Muestra el YAML final tal como lo entiende Compose: con los archivos combinados y las variables de <code>.env</code> ya reemplazadas. Si el archivo tiene un error de sintaxis o de indentación, acá aparece el mensaje con la línea.</div></div>
       </div>
       <div class="card t-comp">
         <h3>Operar servicios</h3>
-        <div class="cmd"><pre><code>docker compose ps</code></pre><div class="what">Estado de los servicios del proyecto.</div></div>
-        <div class="cmd"><pre><code>docker compose logs -f chanchito</code></pre><div class="what">Logs de un servicio (sin nombre: de todos).</div></div>
-        <div class="cmd"><pre><code>docker compose exec chanchito sh</code></pre><div class="what">Terminal dentro de un servicio (usa el <b>nombre del servicio</b>).</div></div>
-        <div class="cmd"><pre><code>docker compose restart chanchito</code></pre><div class="what">Reiniciar uno.</div></div>
+        <div class="cmd"><pre><code>docker compose ps</code></pre><div class="what">Lista los contenedores de este proyecto (solo los de esta carpeta), con su estado y puertos. <code>running</code> = corriendo; <code>exited</code> = se detuvo: mirá sus logs.</div></div>
+        <div class="cmd"><pre><code>docker compose logs -f chanchito</code></pre><div class="what">Muestra los logs del servicio <code>chanchito</code> y sigue en vivo (<code>-f</code>). Sin nombre, muestra los de todos los servicios, con el nombre de cada uno al principio de la línea. <kbd>Ctrl</kbd>+<kbd>C</kbd> deja de mirar.</div></div>
+        <div class="cmd"><pre><code>docker compose exec chanchito sh</code></pre><div class="what">Abre una terminal dentro del contenedor del servicio. Se usa el <b>nombre del servicio</b> del YAML (<code>chanchito</code>), no el del contenedor que crea Compose (<code>carpeta-chanchito-1</code>). Salís con <code>exit</code>.</div></div>
+        <div class="cmd"><pre><code>docker compose restart chanchito</code></pre><div class="what">Detiene y vuelve a arrancar ese servicio, con la misma configuración. Ojo: si cambiaste el YAML o el código de una imagen, <code>restart</code> no lo aplica; para eso, <code>up -d</code> o <code>up -d --build</code>.</div></div>
         <div class="cmd"><pre><code>docker compose stop
-docker compose start</code></pre><div class="what">Detener / arrancar sin borrar.</div></div>
-        <div class="cmd"><pre><code>docker compose build chanchito</code></pre><div class="what">Solo construir la imagen.</div></div>
+docker compose start</code></pre><div class="what"><code>stop</code> detiene los contenedores del proyecto <b>sin borrarlos</b> y <code>start</code> los vuelve a arrancar tal como estaban. A diferencia de <code>down</code>, no se recrea nada.</div></div>
+        <div class="cmd"><pre><code>docker compose build chanchito</code></pre><div class="what">Construye (o reconstruye) solo la imagen de ese servicio, sin arrancar nada. Después, <code>docker compose up -d</code> recrea el contenedor con la imagen nueva.</div></div>
       </div>
     </div>
     <div class="callout warn"><span class="ico">!</span><p><code>docker compose</code> (con espacio) es la versión actual integrada en Docker. <code>docker-compose</code> (con guion) es la v1, ya discontinuada.</p></div>
@@ -394,7 +394,7 @@ env_file: .env</code></pre>
       </div>
       <div class="card t-warn">
         <h3>3. Verificar</h3>
-        <div class="cmd"><pre><code>docker compose config</code></pre><div class="what">Muestra el YAML con las variables ya reemplazadas.</div></div>
+        <div class="cmd"><pre><code>docker compose config</code></pre><div class="what">Imprime el YAML con las variables del <code>.env</code> ya reemplazadas. Si ves un valor vacío donde esperabas la contraseña, el <code>.env</code> no está en la misma carpeta o la variable tiene otro nombre.</div></div>
         <div class="callout info"><span class="ico">i</span><p><code>MONGO_INITDB_ROOT_*</code> solo se aplica la <b>primera vez</b> (con el volumen vacío). Si cambiás la contraseña después, hacé <code>down -v</code> o cambiala dentro de Mongo.</p></div>
       </div>
     </div>

@@ -413,14 +413,14 @@ docker-compose*.yml</code></pre>
       <h3>Comandos de build</h3>
       <div class="grid cols-2">
         <div>
-          <div class="cmd"><pre><code>docker build -t miapp:1 .</code></pre><div class="what">Build normal con tag <code>miapp:1</code> y contexto <code>.</code></div></div>
-          <div class="cmd"><pre><code>docker build -t miapp:dev -f Dockerfile.dev .</code></pre><div class="what">Con otro Dockerfile.</div></div>
-          <div class="cmd"><pre><code>docker build --no-cache -t miapp:1 .</code></pre><div class="what">Ignorar la caché de capas.</div></div>
+          <div class="cmd"><pre><code>docker build -t miapp:1 .</code></pre><div class="what">Construye la imagen con el <code>Dockerfile</code> de la carpeta actual y la llama <code>miapp</code>, versión <code>1</code>. El <code>.</code> final es el <b>contexto</b>: los archivos que el Dockerfile puede copiar con <code>COPY</code> (menos los que excluye <code>.dockerignore</code>).</div></div>
+          <div class="cmd"><pre><code>docker build -t miapp:dev -f Dockerfile.dev .</code></pre><div class="what"><code>-f</code> elige otro Dockerfile, por ejemplo uno para desarrollo con nodemon. El contexto sigue siendo la carpeta actual, así que los <code>COPY</code> se resuelven igual.</div></div>
+          <div class="cmd"><pre><code>docker build --no-cache -t miapp:1 .</code></pre><div class="what">Ejecuta todos los pasos de nuevo, sin reutilizar capas guardadas (ver “Capas y caché” arriba). Usalo si sospechás que algo quedó viejo en la caché; el build tarda más.</div></div>
         </div>
         <div>
-          <div class="cmd"><pre><code>docker build --target build -t api:build .</code></pre><div class="what">Construir solo hasta una etapa (multi-stage).</div></div>
-          <div class="cmd"><pre><code>docker build --build-arg VERSION=2.0 -t miapp:2 .</code></pre><div class="what">Pasar valores a un <code>ARG</code>.</div></div>
-          <div class="cmd"><pre><code>docker build -t api:1 -f src/Api/Dockerfile .</code></pre><div class="what">Dockerfile en subcarpeta, contexto en la raíz (caso .NET).</div></div>
+          <div class="cmd"><pre><code>docker build --target build -t api:build .</code></pre><div class="what">En un Dockerfile <b>multi-stage</b> (con varias etapas <code>FROM … AS nombre</code>), construye solo hasta la etapa indicada y se detiene ahí. Sirve para correr los tests o revisar qué produce la etapa de compilación.</div></div>
+          <div class="cmd"><pre><code>docker build --build-arg VERSION=2.0 -t miapp:2 .</code></pre><div class="what">Le pasa un valor a una instrucción <code>ARG VERSION</code> del Dockerfile, que existe solo mientras se construye la imagen (no queda como variable de entorno al correr el contenedor). No lo uses para contraseñas: queda registrado en la imagen.</div></div>
+          <div class="cmd"><pre><code>docker build -t api:1 -f src/Api/Dockerfile .</code></pre><div class="what">El Dockerfile está en una subcarpeta, pero el contexto es la raíz (<code>.</code>), porque necesita copiar archivos de varias carpetas del proyecto (en .NET, la solución y otros proyectos). Las rutas de los <code>COPY</code> se escriben desde la raíz.</div></div>
         </div>
       </div>
     </div>

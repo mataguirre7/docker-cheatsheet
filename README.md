@@ -17,7 +17,7 @@ Sitio 100 % estático (HTML + CSS + JS, sin build ni dependencias).
 
 ```
 docker-cheatsheets/
-├── index.html, 01-…05-*.html   # páginas
+├── index.html, 00-…05-*.html   # páginas
 ├── 404.html                    # página de error (Netlify la usa sola)
 ├── assets/
 │   ├── style.css               # estilos y temas

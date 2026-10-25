@@ -102,14 +102,14 @@
         <h3>Descargar (pull)</h3>
         <div class="cmd">
           <pre><code>docker pull &lt;imagen&gt;:&lt;version&gt;</code></pre>
-          <div class="what">Baja una imagen desde Docker Hub. Sin versión ⇒ <code>:latest</code>.</div>
+          <div class="what">Descarga una imagen desde Docker Hub (el catálogo público de imágenes) y la guarda en tu PC, sin crear ningún contenedor. Si no ponés versión, Docker usa <code>:latest</code>, que es “la más nueva”: cambia con el tiempo, así que en proyectos conviene fijar una versión concreta.</div>
         </div>
         <div class="cmd">
           <pre><code>docker pull node:18
 docker pull node:latest
 docker pull mysql:latest
 docker pull mongo</code></pre>
-          <div class="what">Ejemplos: Node 18, la última de Node, MySQL y MongoDB.</div>
+          <div class="what">Ejemplos: Node 18 fijo, la última de Node, MySQL y MongoDB. Si la imagen ya está descargada y no cambió, Docker lo avisa (<i>Image is up to date</i>) y no baja nada.</div>
         </div>
       </div>
 
@@ -117,15 +117,15 @@ docker pull mongo</code></pre>
         <h3>Listar imágenes</h3>
         <div class="cmd">
           <pre><code>docker images</code></pre>
-          <div class="what">Lista las imágenes descargadas/construidas (igual que <code>docker image ls</code>).</div>
+          <div class="what">Lista las imágenes que tenés en tu PC, descargadas o construidas por vos. Muestra <b>REPOSITORY</b> (nombre), <b>TAG</b> (versión), <b>IMAGE ID</b> y <b>SIZE</b>. Es lo mismo que <code>docker image ls</code>. Las que aparecen como <code>&lt;none&gt;</code> son versiones viejas que quedaron sin nombre al reconstruir.</div>
         </div>
         <div class="cmd">
           <pre><code>docker image inspect &lt;imagen&gt;</code></pre>
-          <div class="what">Detalle completo en JSON: capas, variables, comando por defecto, puertos expuestos.</div>
+          <div class="what">Muestra en formato JSON toda la información de una imagen: sus capas, variables de entorno, el comando que ejecuta al arrancar (<code>Cmd</code>) y los puertos que declara (<code>ExposedPorts</code>). Sirve para saber cómo se usa una imagen que no hiciste vos.</div>
         </div>
         <div class="cmd">
           <pre><code>docker history &lt;imagen&gt;</code></pre>
-          <div class="what">Muestra las capas y qué instrucción del Dockerfile generó cada una.</div>
+          <div class="what">Lista las capas de la imagen, de la más nueva a la más vieja, con el tamaño de cada una y la instrucción del Dockerfile que la generó. Útil para encontrar qué paso hace pesada a una imagen.</div>
         </div>
       </div>
 
@@ -133,12 +133,12 @@ docker pull mongo</code></pre>
         <h3>Borrar imágenes</h3>
         <div class="cmd">
           <pre><code>docker image rm &lt;imagen&gt;:&lt;version&gt;</code></pre>
-          <div class="what">Borra una imagen. Atajo equivalente: <code>docker rmi</code>.</div>
+          <div class="what">Borra una imagen de tu PC (no afecta a Docker Hub). El atajo <code>docker rmi</code> hace lo mismo. Podés indicar la imagen por nombre y versión o por su IMAGE ID.</div>
         </div>
         <div class="cmd">
           <pre><code>docker image rm node:16
 docker image rm mysql:latest</code></pre>
-          <div class="what">Ejemplos. Falla si hay un contenedor (aunque esté detenido) usándola.</div>
+          <div class="what">Ejemplos. Falla con <i>“image is being used by stopped container”</i> si algún contenedor, aunque esté detenido, se creó con esa imagen: primero borrá el contenedor (<code>docker rm</code>) o forzalo con <code>-f</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker image prune</code></pre>
@@ -150,19 +150,19 @@ docker image rm mysql:latest</code></pre>
         <h3>Construir una imagen (build)</h3>
         <div class="cmd">
           <pre><code>docker build -t &lt;nombre&gt;:&lt;tag&gt; &lt;ruta-contexto&gt;</code></pre>
-          <div class="what">Construye usando el <code>Dockerfile</code> de la carpeta. <b>Ojo al espacio</b> antes de la ruta.</div>
+          <div class="what">Construye una imagen siguiendo el <code>Dockerfile</code> que hay en la ruta indicada. <code>-t</code> (<i>tag</i>) le pone nombre y versión. El último argumento es el <b>contexto</b>: la carpeta cuyos archivos puede copiar el Dockerfile. Ojo: hay un espacio entre el tag y la ruta.</div>
         </div>
         <div class="cmd">
           <pre><code>docker build -t miapp:1 .</code></pre>
-          <div class="what">El <code>.</code> es el <b>build context</b>: la carpeta actual.</div>
+          <div class="what">El <code>.</code> significa “la carpeta actual”: Docker usa el Dockerfile de ahí y puede copiar cualquier archivo de esa carpeta. Al terminar, <code>miapp:1</code> aparece en <code>docker images</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker build -t miapp:dev -f Dockerfile.dev .</code></pre>
-          <div class="what">Usar otro Dockerfile con <code>-f</code>.</div>
+          <div class="what"><code>-f</code> (<i>file</i>) indica qué Dockerfile usar cuando no se llama exactamente <code>Dockerfile</code>, por ejemplo uno separado para desarrollo. El contexto sigue siendo el <code>.</code> del final.</div>
         </div>
         <div class="cmd">
           <pre><code>docker build --no-cache -t miapp:1 .</code></pre>
-          <div class="what">Reconstruye todo sin usar la caché de capas.</div>
+          <div class="what">Reconstruye todos los pasos desde cero, sin reutilizar capas guardadas. Usalo cuando sospechás que la caché quedó vieja, por ejemplo si un <code>RUN apt-get update</code> no trae paquetes nuevos. Tarda más.</div>
         </div>
       </div>
 
@@ -170,12 +170,12 @@ docker image rm mysql:latest</code></pre>
         <h3>Etiquetar y subir</h3>
         <div class="cmd">
           <pre><code>docker tag miapp:1 &lt;usuario&gt;/miapp:1</code></pre>
-          <div class="what">Le da otro nombre a la imagen (para subirla a tu cuenta).</div>
+          <div class="what">Le agrega otro nombre a una imagen que ya existe, sin copiarla (las dos etiquetas apuntan a la misma imagen). Para subir a Docker Hub el nombre tiene que empezar con tu usuario: <code>&lt;usuario&gt;/miapp</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker login
 docker push &lt;usuario&gt;/miapp:1</code></pre>
-          <div class="what">Sube la imagen a Docker Hub.</div>
+          <div class="what"><code>docker login</code> te pide usuario y contraseña (o un <i>access token</i>) de Docker Hub y los recuerda. <code>docker push</code> sube la imagen a tu cuenta; después cualquiera con acceso puede bajarla con <code>docker pull &lt;usuario&gt;/miapp:1</code>.</div>
         </div>
       </div>
     </div>
@@ -196,7 +196,7 @@ docker push &lt;usuario&gt;/miapp:1</code></pre>
         </div>
         <div class="cmd">
           <pre><code>docker create --name &lt;nombre&gt; &lt;imagen&gt;</code></pre>
-          <div class="what">Con nombre propio (si no, Docker inventa uno tipo <code>jolly_turing</code>).</div>
+          <div class="what">Crea un contenedor a partir de una imagen, pero <b>no lo arranca</b> (queda en estado <i>Created</i>; se inicia con <code>docker start</code>). <code>--name</code> le da un nombre para usarlo en los demás comandos; si no lo ponés, Docker inventa uno como <code>jolly_turing</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker create --name monguito \
@@ -204,7 +204,7 @@ docker push &lt;usuario&gt;/miapp:1</code></pre>
   -e MONGO_INITDB_ROOT_USERNAME=mati \
   -e MONGO_INITDB_ROOT_PASSWORD=&lt;password&gt; \
   mongo</code></pre>
-          <div class="what">Con puertos (<code>-p HOST:CONT</code>) y variables de entorno (<code>-e</code>). <b>Las flags van antes de la imagen.</b></div>
+          <div class="what">Un Mongo con puerto y usuario. <code>-p 27017:27017</code> publica el puerto: <b>PC:contenedor</b>, así tu app local puede conectarse a <code>localhost:27017</code>. Cada <code>-e</code> define una variable de entorno que la imagen de Mongo lee al iniciar para crear el usuario administrador. Todas las opciones van <b>antes</b> del nombre de la imagen. La <code>\</code> al final de línea solo sirve para partir el comando en varias líneas (en PowerShell se usa <code>`</code>).</div>
         </div>
       </div>
 
@@ -212,20 +212,20 @@ docker push &lt;usuario&gt;/miapp:1</code></pre>
         <h3>Arrancar / detener</h3>
         <div class="cmd">
           <pre><code>docker start &lt;id|nombre&gt;</code></pre>
-          <div class="what">Inicia un contenedor creado o detenido.</div>
+          <div class="what">Arranca un contenedor que ya existe (creado o detenido). Conserva todo lo que tenía: archivos, configuración y puertos. Devuelve la terminal enseguida.</div>
         </div>
         <div class="cmd">
           <pre><code>docker stop &lt;id|nombre&gt;</code></pre>
-          <div class="what"><b>Detiene</b> el contenedor (no lo borra).</div>
+          <div class="what">Detiene el contenedor de forma ordenada: le avisa al programa que termine y, si no lo hace en 10 segundos, lo corta. El contenedor sigue existiendo (estado <i>Exited</i>) y se puede volver a arrancar.</div>
         </div>
         <div class="cmd">
           <pre><code>docker restart &lt;id|nombre&gt;</code></pre>
-          <div class="what">Stop + start.</div>
+          <div class="what">Equivale a <code>stop</code> + <code>start</code>. Útil cuando cambiaste algo que el programa solo lee al iniciar, o para destrabar una app que dejó de responder.</div>
         </div>
         <div class="cmd">
           <pre><code>docker pause &lt;id|nombre&gt;
 docker unpause &lt;id|nombre&gt;</code></pre>
-          <div class="what">Pausa real: congela los procesos sin detenerlos.</div>
+          <div class="what">Congela los procesos del contenedor sin detenerlo: dejan de usar CPU pero conservan todo en memoria. <code>docker unpause</code> los reanuda en el mismo punto. Se usa poco; para apagar, usá <code>stop</code>.</div>
         </div>
       </div>
 
@@ -233,15 +233,15 @@ docker unpause &lt;id|nombre&gt;</code></pre>
         <h3>Listar contenedores</h3>
         <div class="cmd">
           <pre><code>docker ps</code></pre>
-          <div class="what">Solo los que están <b>corriendo</b>.</div>
+          <div class="what">Lista los contenedores que están <b>corriendo</b>: ID, imagen, comando, hace cuánto se creó, estado y puertos publicados (por ejemplo <code>0.0.0.0:3000-&gt;3000/tcp</code>). Si un contenedor no aparece, puede haberse detenido: probá con <code>-a</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker ps -a</code></pre>
-          <div class="what"><b>Todos</b>: activos e inactivos (created, exited…).</div>
+          <div class="what">Lista <b>todos</b> los contenedores, también los detenidos. En STATUS: <code>Up</code> = corriendo, <code>Exited (0)</code> = terminó bien, <code>Exited (1)</code> u otro número = terminó con error (mirá <code>docker logs</code>), <code>Created</code> = nunca se arrancó.</div>
         </div>
         <div class="cmd">
           <pre><code>docker ps -q</code></pre>
-          <div class="what">Solo los IDs (útil para combinar con otros comandos).</div>
+          <div class="what">Muestra solo los IDs, uno por línea, sin tabla. No sirve para leer, sino para pasarle esa lista a otro comando (ver “Atajos” al final de esta página).</div>
         </div>
       </div>
 
@@ -249,15 +249,15 @@ docker unpause &lt;id|nombre&gt;</code></pre>
         <h3>Borrar contenedores</h3>
         <div class="cmd">
           <pre><code>docker rm &lt;id|nombre&gt;</code></pre>
-          <div class="what">Borra un contenedor <b>detenido</b>. Ej: <code>docker rm 2d77ac5398a8</code></div>
+          <div class="what">Borra un contenedor detenido, junto con los archivos que se hayan creado dentro de él (no borra la imagen ni los volúmenes). Ejemplo: <code>docker rm 2d77ac5398a8</code>; alcanza con los primeros caracteres del ID. Si está corriendo, primero <code>docker stop</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker rm -f &lt;id|nombre&gt;</code></pre>
-          <div class="what">Lo detiene y lo borra en un paso.</div>
+          <div class="what"><code>-f</code> (<i>force</i>) lo detiene de golpe y lo borra en un solo paso. Práctico en desarrollo; no le da tiempo al programa a cerrar ordenadamente.</div>
         </div>
         <div class="cmd">
           <pre><code>docker container prune</code></pre>
-          <div class="what">Borra todos los contenedores detenidos.</div>
+          <div class="what">Borra todos los contenedores detenidos de una vez. Pide confirmación (<code>y</code>). No toca los que están corriendo.</div>
         </div>
       </div>
     </div>
@@ -274,15 +274,15 @@ docker unpause &lt;id|nombre&gt;</code></pre>
         <h3>Formas de usar run</h3>
         <div class="cmd">
           <pre><code>docker run &lt;imagen&gt;</code></pre>
-          <div class="what">Queda “pegado” a la terminal. <kbd>Ctrl</kbd>+<kbd>C</kbd> corta la ejecución.</div>
+          <div class="what">Crea y arranca un contenedor en un solo paso (es <code>create</code> + <code>start</code>). Si la imagen no está en tu PC, la descarga antes. Sin <code>-d</code>, la terminal queda mostrando la salida del programa; <kbd>Ctrl</kbd>+<kbd>C</kbd> lo detiene.</div>
         </div>
         <div class="cmd">
           <pre><code>docker run -d &lt;imagen&gt;</code></pre>
-          <div class="what"><b>Detached</b>: corre en segundo plano y te devuelve la terminal.</div>
+          <div class="what"><code>-d</code> (<i>detached</i>, desconectado) lo deja corriendo en segundo plano y te devuelve la terminal. Docker imprime el ID del contenedor nuevo; para ver su salida usá <code>docker logs</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker run --name &lt;nombre&gt; -p &lt;host&gt;:&lt;cont&gt; -d &lt;imagen&gt;</code></pre>
-          <div class="what">La forma más habitual: con nombre, puerto y en segundo plano.</div>
+          <div class="what">La forma más habitual: con nombre propio, un puerto publicado y en segundo plano. <code>-p 8080:80</code> hace que lo que entra por el puerto 8080 de tu PC llegue al puerto 80 del contenedor. Se abre en el navegador como <code>http://localhost:8080</code>.</div>
         </div>
         <div class="callout bad"><span class="ico">✕</span><p><code>docker run mongo -d</code> <b>no funciona como esperás</b>: todo lo que va después de la imagen se pasa como argumento al proceso del contenedor. Escribí <code>docker run -d mongo</code>.</p></div>
       </div>
@@ -295,19 +295,19 @@ docker unpause &lt;id|nombre&gt;</code></pre>
   -e MONGO_INITDB_ROOT_PASSWORD=&lt;password&gt; \
   -v mongo-data:/data/db \
   mongo</code></pre>
-          <div class="what">Mongo listo para usar, con datos persistentes.</div>
+          <div class="what">Un Mongo listo para usar. Además del puerto y el usuario (<code>-e</code>), <code>-v mongo-data:/data/db</code> guarda los datos en un <b>volumen</b>: si borrás el contenedor y creás otro con el mismo <code>-v</code>, los datos siguen ahí.</div>
         </div>
         <div class="cmd">
           <pre><code>docker run --rm -it node:18 bash</code></pre>
-          <div class="what">Shell temporal dentro de una imagen; se borra al salir (<code>--rm</code>).</div>
+          <div class="what">Abre una terminal dentro de un contenedor nuevo de Node, para probar cosas. <code>-it</code> conecta tu teclado (<i>interactive</i> + <i>tty</i>); <code>--rm</code> borra el contenedor al salir con <code>exit</code>. Lo que va después de la imagen (<code>bash</code>) es el programa a ejecutar adentro.</div>
         </div>
         <div class="cmd">
           <pre><code>docker run -d --name chanchito -p 3000:3000 --network mired miapp:1</code></pre>
-          <div class="what">Tu app conectada a una red existente.</div>
+          <div class="what">Arranca tu app dentro de la red <code>mired</code> (creada antes con <code>docker network create</code>). Así puede conectarse a otros contenedores de esa red usando su nombre como dirección, por ejemplo <code>mongodb://monguito:27017</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker run -d --env-file .env -p 3000:3000 miapp:1</code></pre>
-          <div class="what">Variables de entorno desde un archivo.</div>
+          <div class="what">Carga las variables de entorno desde un archivo <code>.env</code> (una por línea, <code>CLAVE=valor</code>) en vez de escribir muchos <code>-e</code>. Evita dejar contraseñas en el historial de la terminal.</div>
         </div>
       </div>
     </div>
@@ -353,34 +353,34 @@ docker unpause &lt;id|nombre&gt;</code></pre>
         <h3>Logs</h3>
         <div class="cmd">
           <pre><code>docker logs &lt;id|nombre&gt;</code></pre>
-          <div class="what">Lo que la app imprimió por consola (<code>console.log</code>, errores…).</div>
+          <div class="what">Muestra todo lo que el programa del contenedor escribió en la consola: tus <code>console.log</code>, errores y mensajes de arranque. Es lo primero que hay que mirar cuando un contenedor no anda o se detiene solo. Funciona también con contenedores detenidos.</div>
         </div>
         <div class="cmd">
           <pre><code>docker logs -f &lt;id|nombre&gt;</code></pre>
-          <div class="what">Modo <b>watch</b>: se queda escuchando nuevos logs (= <code>--follow</code>).</div>
+          <div class="what"><code>-f</code> (<i>follow</i>) se queda mostrando los logs nuevos a medida que aparecen, como un monitor en vivo. <kbd>Ctrl</kbd>+<kbd>C</kbd> deja de mirar; el contenedor sigue corriendo.</div>
         </div>
         <div class="cmd">
           <pre><code>docker logs --tail 100 -f &lt;nombre&gt;</code></pre>
-          <div class="what">Solo las últimas 100 líneas y sigue escuchando.</div>
+          <div class="what">Muestra solo las últimas 100 líneas y sigue en vivo. Útil cuando el contenedor lleva mucho tiempo andando y tiene miles de líneas de log.</div>
         </div>
       </div>
       <div class="card t-cont">
         <h3>Inspeccionar</h3>
         <div class="cmd">
           <pre><code>docker inspect &lt;id|nombre&gt;</code></pre>
-          <div class="what">Todo en JSON: IP, red, volúmenes montados, variables, estado.</div>
+          <div class="what">Toda la información del contenedor en JSON: su IP en cada red, volúmenes montados, variables de entorno, puertos y estado (incluido el código de salida si se detuvo). Para un solo dato: <code>docker inspect -f "{{.State.Status}}" &lt;nombre&gt;</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker port &lt;nombre&gt;</code></pre>
-          <div class="what">Qué puertos tiene publicados.</div>
+          <div class="what">Muestra qué puertos del contenedor están publicados y en qué puerto de tu PC, por ejemplo <code>3000/tcp -&gt; 0.0.0.0:3000</code>. Si no muestra nada, el contenedor se creó sin <code>-p</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker stats</code></pre>
-          <div class="what">Uso de CPU / RAM en vivo de cada contenedor.</div>
+          <div class="what">Una tabla en vivo con el uso de CPU, memoria, red y disco de cada contenedor corriendo. <kbd>Ctrl</kbd>+<kbd>C</kbd> para salir. Sirve para encontrar qué contenedor está consumiendo de más.</div>
         </div>
         <div class="cmd">
           <pre><code>docker top &lt;nombre&gt;</code></pre>
-          <div class="what">Procesos que corren dentro.</div>
+          <div class="what">Lista los procesos que corren dentro del contenedor, con su PID y comando. Permite confirmar que tu app sigue viva adentro.</div>
         </div>
       </div>
     </div>
@@ -397,27 +397,27 @@ docker unpause &lt;id|nombre&gt;</code></pre>
         <h3>Abrir una terminal adentro</h3>
         <div class="cmd">
           <pre><code>docker exec -it &lt;nombre&gt; sh</code></pre>
-          <div class="what">Shell dentro del contenedor (debe estar corriendo). Salís con <code>exit</code>.</div>
+          <div class="what">Abre una terminal dentro de un contenedor que <b>está corriendo</b>, para mirar archivos o probar comandos desde adentro. <code>-it</code> conecta tu teclado. Salís con <code>exit</code> y el contenedor sigue funcionando.</div>
         </div>
         <div class="cmd">
           <pre><code>docker exec -it &lt;nombre&gt; bash</code></pre>
-          <div class="what">Si la imagen tiene bash (las <code>alpine</code> no, usá <code>sh</code>).</div>
+          <div class="what">Lo mismo, con <code>bash</code>, que tiene historial y autocompletado. Las imágenes <i>alpine</i> (versiones mínimas) no traen bash: si aparece <i>“executable file not found”</i>, usá <code>sh</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker exec -it monguito mongosh -u mati -p &lt;password&gt;</code></pre>
-          <div class="what">Consola de Mongo directo en el contenedor.</div>
+          <div class="what">Abre la consola de MongoDB (<code>mongosh</code>) dentro del contenedor, con el usuario creado al arrancarlo. Ahí podés escribir <code>show dbs</code> o <code>db.coleccion.find()</code>. Salís con <code>exit</code>.</div>
         </div>
       </div>
       <div class="card t-cont">
         <h3>Ejecutar un comando suelto</h3>
         <div class="cmd">
           <pre><code>docker exec &lt;nombre&gt; ls /home/app</code></pre>
-          <div class="what">Corre el comando y vuelve.</div>
+          <div class="what">Sin <code>-it</code>, ejecuta un solo comando dentro del contenedor, muestra el resultado y vuelve a tu terminal. Ejemplo: listar los archivos de la app para confirmar que se copiaron.</div>
         </div>
         <div class="cmd">
           <pre><code>docker cp &lt;nombre&gt;:/ruta/archivo.txt ./archivo.txt
 docker cp ./config.json &lt;nombre&gt;:/home/app/config.json</code></pre>
-          <div class="what">Copiar archivos contenedor ⇄ PC.</div>
+          <div class="what">Copia archivos entre el contenedor y tu PC, en cualquier dirección: primero el origen y después el destino. La parte del contenedor se escribe <code>nombre:/ruta</code>. Funciona aunque el contenedor esté detenido.</div>
         </div>
       </div>
     </div>
@@ -434,19 +434,19 @@ docker cp ./config.json &lt;nombre&gt;:/home/app/config.json</code></pre>
         <h3>Gestionar redes</h3>
         <div class="cmd">
           <pre><code>docker network ls</code></pre>
-          <div class="what">Listar redes (también vale <code>docker network list</code>).</div>
+          <div class="what">Lista las redes de Docker. Siempre existen <code>bridge</code> (la red por defecto), <code>host</code> y <code>none</code>; las demás las creaste vos o Compose (con nombres como <code>carpeta_default</code>).</div>
         </div>
         <div class="cmd">
           <pre><code>docker network create &lt;nombre&gt;</code></pre>
-          <div class="what">Crear una red. Ej: <code>docker network create mired</code></div>
+          <div class="what">Crea una red propia. Los contenedores conectados a la misma red propia se encuentran usando su <b>nombre</b> como dirección (<code>monguito</code> en vez de una IP). En la red por defecto <code>bridge</code> eso no funciona. Ejemplo: <code>docker network create mired</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker network rm &lt;nombre&gt;</code></pre>
-          <div class="what">Eliminar una red (sin contenedores conectados).</div>
+          <div class="what">Borra una red. Falla si todavía hay contenedores conectados: detenelos o desconectalos primero.</div>
         </div>
         <div class="cmd">
           <pre><code>docker network inspect &lt;nombre&gt;</code></pre>
-          <div class="what">Ver qué contenedores hay conectados y sus IPs.</div>
+          <div class="what">Muestra la configuración de la red y, en <code>Containers</code>, qué contenedores están conectados y la IP de cada uno. Útil cuando dos contenedores no se ven entre sí.</div>
         </div>
       </div>
       <div class="card t-net">
@@ -457,12 +457,12 @@ docker cp ./config.json &lt;nombre&gt;:/home/app/config.json</code></pre>
   -e MONGO_INITDB_ROOT_USERNAME=mati \
   -e MONGO_INITDB_ROOT_PASSWORD=&lt;password&gt; \
   mongo</code></pre>
-          <div class="what">Crear el contenedor ya dentro de la red.</div>
+          <div class="what">El mismo Mongo de antes, pero con <code>--network mired</code>: ya nace conectado a esa red, así tu app (en la misma red) lo encuentra como <code>monguito:27017</code>.</div>
         </div>
         <div class="cmd">
           <pre><code>docker network connect mired &lt;nombre&gt;
 docker network disconnect mired &lt;nombre&gt;</code></pre>
-          <div class="what">Conectar/desconectar un contenedor que ya existe.</div>
+          <div class="what">Conecta a una red un contenedor que ya existe (o lo desconecta con <code>disconnect</code>), sin recrearlo. Un contenedor puede estar en varias redes a la vez.</div>
         </div>
         <div class="callout info"><span class="ico">i</span><p>Dentro de la red, la app se conecta usando el <b>nombre del contenedor</b> como host: <code>mongodb://mati:&lt;pass&gt;@monguito:27017/miapp?authSource=admin</code></p></div>
       </div>
@@ -484,29 +484,29 @@ docker network disconnect mired &lt;nombre&gt;</code></pre>
         </div>
         <div class="cmd">
           <pre><code>docker volume create &lt;nombre&gt;</code></pre>
-          <div class="what">Crear (con <code>-v</code> o compose se crea solo si no existe).</div>
+          <div class="what">Crea un volumen: un espacio de almacenamiento que administra Docker y que sobrevive aunque borres el contenedor. Casi nunca hace falta crearlo a mano: <code>-v nombre:/ruta</code> o Compose lo crean solos si no existe.</div>
         </div>
         <div class="cmd">
           <pre><code>docker volume inspect &lt;nombre&gt;</code></pre>
-          <div class="what">Dónde está físicamente y quién lo creó.</div>
+          <div class="what">Muestra dónde guarda Docker los datos (<code>Mountpoint</code>, una ruta dentro de la máquina virtual de Docker Desktop, no una carpeta de Windows) y cuándo se creó.</div>
         </div>
         <div class="cmd">
           <pre><code>docker volume rm &lt;nombre&gt;</code></pre>
-          <div class="what"><b>Borra los datos</b> para siempre. No se puede si un contenedor lo usa.</div>
+          <div class="what">Borra el volumen y <b>sus datos para siempre</b>. Falla si algún contenedor, aunque esté detenido, lo usa: borrá primero el contenedor. <code>docker volume ls</code> lista los existentes.</div>
         </div>
       </div>
       <div class="card t-vol">
         <h3>Montar volúmenes</h3>
         <div class="cmd">
           <pre><code>docker run -d -v mongo-data:/data/db mongo</code></pre>
-          <div class="what"><b>Volumen nombrado</b>: <code>nombre:ruta-en-contenedor</code>.</div>
+          <div class="what"><b>Volumen nombrado</b>: <code>-v nombre:ruta-dentro-del-contenedor</code>. Todo lo que Mongo escribe en <code>/data/db</code> queda en el volumen <code>mongo-data</code>. Es la forma recomendada para datos de bases de datos.</div>
         </div>
         <div class="cmd">
           <pre><code># PowerShell
 docker run -d -v ${PWD}:/home/app -p 3000:3000 miapp:dev
 # Git Bash / Linux / macOS
 docker run -d -v "$(pwd)":/home/app -p 3000:3000 miapp:dev</code></pre>
-          <div class="what"><b>Bind mount</b>: tu carpeta actual dentro del contenedor.</div>
+          <div class="what"><b>Bind mount</b>: en vez de un volumen, monta una carpeta de tu PC dentro del contenedor (<code>${PWD}</code> o <code>$(pwd)</code> = la carpeta actual). Si editás un archivo en tu PC, el contenedor lo ve al instante: se usa en desarrollo junto con nodemon. La sintaxis de la carpeta actual cambia según la terminal.</div>
         </div>
       </div>
     </div>
@@ -523,7 +523,7 @@ docker run -d -v "$(pwd)":/home/app -p 3000:3000 miapp:dev</code></pre>
         <h3>Liberar espacio</h3>
         <div class="cmd">
           <pre><code>docker system df</code></pre>
-          <div class="what">Cuánto ocupan imágenes, contenedores, volúmenes y caché.</div>
+          <div class="what">Muestra cuánto disco ocupa Docker, separado en imágenes, contenedores, volúmenes y caché de builds, y cuánto se podría liberar (<code>RECLAIMABLE</code>).</div>
         </div>
         <div class="cmd">
           <pre><code>docker system prune</code></pre>
@@ -531,11 +531,11 @@ docker run -d -v "$(pwd)":/home/app -p 3000:3000 miapp:dev</code></pre>
         </div>
         <div class="cmd">
           <pre><code>docker system prune -a --volumes</code></pre>
-          <div class="what"><b>Nuclear</b>: además todas las imágenes sin uso y los volúmenes sin uso (¡datos de DB!).</div>
+          <div class="what"><b>Limpieza total</b>: además de lo anterior, borra todas las imágenes que no use ningún contenedor (habrá que volver a descargarlas) y los volúmenes sin uso, <b>incluidos datos de bases de datos</b> de contenedores borrados. Leé bien la confirmación antes de aceptar.</div>
         </div>
         <div class="cmd">
           <pre><code>docker builder prune</code></pre>
-          <div class="what">Solo la caché de builds.</div>
+          <div class="what">Borra solo la caché de construcción de imágenes. Libera bastante espacio si construís seguido; el próximo <code>docker build</code> tarda más porque no reutiliza pasos.</div>
         </div>
       </div>
       <div class="card t-bad">
@@ -543,15 +543,15 @@ docker run -d -v "$(pwd)":/home/app -p 3000:3000 miapp:dev</code></pre>
         <div class="cmd">
           <pre><code># PowerShell / Bash
 docker stop $(docker ps -q)</code></pre>
-          <div class="what">Detener todos los contenedores que están corriendo.</div>
+          <div class="what"><code>$(docker ps -q)</code> ejecuta primero <code>docker ps -q</code> (los IDs de los que corren) y pone el resultado como argumentos de <code>docker stop</code>. Resultado: detiene todos los contenedores en marcha.</div>
         </div>
         <div class="cmd">
           <pre><code>docker rm $(docker ps -aq)</code></pre>
-          <div class="what">Borrar todos los contenedores (detenidos).</div>
+          <div class="what">Mismo truco con <code>-aq</code> (todos los IDs, también los detenidos): borra todos los contenedores. Los que estén corriendo dan error y quedan; detenelos antes con el comando anterior.</div>
         </div>
         <div class="cmd">
           <pre><code>docker volume prune</code></pre>
-          <div class="what">Borra volúmenes que no usa ningún contenedor.</div>
+          <div class="what">Borra los volúmenes que no usa ningún contenedor. Pide confirmación. Ojo: un volumen de base de datos cuyo contenedor borraste cuenta como “sin uso”.</div>
         </div>
       </div>
     </div>
@@ -590,7 +590,7 @@ docker start chanchito
 #    http://localhost:3000/crear   -> crea un documento
 #    http://localhost:3000         -> lista los documentos
 docker logs -f chanchito</code></pre>
-        <div class="what">Con compose todo esto se reduce a <code>docker compose up</code> → ver la <a href="04-compose.html">cheatsheet de Compose</a>.</div>
+        <div class="what">Los mismos pasos que hace Compose, a mano: red, base de datos dentro de la red, imagen de la app y app dentro de la red apuntando a <code>monguito</code>. Con un <code>docker-compose.yml</code> todo esto se reduce a <code>docker compose up</code> (ver la hoja de <a href="04-compose.html">Compose</a>).</div>
       </div>
     </div>
   </section>
