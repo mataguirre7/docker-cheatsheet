@@ -26,7 +26,7 @@
   <div class="hero">
     <span class="eyebrow">Cheatsheet 03</span>
     <h1>Dockerfile</h1>
-    <p class="lead">La receta para construir <b>tu propia imagen</b>. Cada instrucción genera una capa; el orden importa para la caché.</p>
+    <p class="lead">El Dockerfile es la receta para construir <b>tu propia imagen</b>: un archivo de texto llamado exactamente <code>Dockerfile</code> (sin extensión), en la carpeta de tu proyecto, con instrucciones que Docker ejecuta de arriba hacia abajo cuando corrés <code>docker build</code>.</p>
     <nav class="toc">
       <a href="#instrucciones">Instrucciones</a>
       <a href="#node-prod">Node producción</a>
@@ -38,6 +38,22 @@
       <a href="#build">Construir</a>
     </nav>
   </div>
+
+  <section class="terms-box">
+    <h2>Términos de esta página</h2>
+    <dl class="terms">
+      <dt>Instrucción</dt><dd>Cada línea que empieza con una palabra en mayúsculas (<code>FROM</code>, <code>COPY</code>, <code>RUN</code>…). Es un paso de la receta.</dd>
+      <dt>Imagen base</dt><dd>La imagen de la que partís con <code>FROM</code>, por ejemplo <code>node:18</code>: ya trae un Linux con Node instalado, así no empezás de cero.</dd>
+      <dt>Capa (layer)</dt><dd>El resultado guardado de cada instrucción. Una imagen es una pila de capas; si una capa no cambió, Docker la reutiliza.</dd>
+      <dt>Caché</dt><dd>Las capas guardadas de builds anteriores. Gracias a la caché, un rebuild solo rehace los pasos desde el primero que cambió.</dd>
+      <dt>Build context</dt><dd>La carpeta que le pasás a <code>docker build</code> (el <code>.</code> del final). <code>COPY</code> solo puede leer archivos de ahí adentro.</dd>
+      <dt>Dependencias</dt><dd>Las librerías externas que usa tu app (en Node, lo que figura en <code>package.json</code> y se instala en <code>node_modules</code>).</dd>
+      <dt>Producción / desarrollo</dt><dd><b>Producción</b>: la versión que usan los usuarios reales, optimizada y estable. <b>Desarrollo</b>: tu entorno de trabajo, donde importa ver los cambios rápido.</dd>
+      <dt>Multi-stage</dt><dd>Un Dockerfile con varias etapas (<code>FROM</code> repetido): una para compilar y otra, más liviana, para ejecutar.</dd>
+      <dt>Exec form</dt><dd>Escribir <code>CMD</code> o <code>ENTRYPOINT</code> como lista JSON: <code>["node", "app.js"]</code>. Es la forma recomendada.</dd>
+      <dt>.dockerignore</dt><dd>Un archivo que lista lo que <b>no</b> debe entrar al build context (como <code>.gitignore</code>, pero para Docker).</dd>
+    </dl>
+  </section>
 
   <!-- ================= INSTRUCCIONES ================= -->
   <section class="block" id="instrucciones">
@@ -77,8 +93,8 @@
     </div>
     <div class="grid cols-2">
       <div class="card t-img">
-        <span class="tag">Tu versión</span>
-        <h3>Dockerfile (pruebas-docker)</h3>
+        <span class="tag">Versión básica</span>
+        <h3>Dockerfile mínimo</h3>
         <div class="code-label"><span class="file">Dockerfile</span><span>funciona ✓</span></div>
         <pre class="big"><code data-lang="dockerfile"># imagen a utilizar
 FROM node:latest
@@ -95,7 +111,7 @@ EXPOSE 3000
 # comando + argumentos
 CMD ["node", "/home/app/app.js"]</code></pre>
         <div class="callout warn"><span class="ico">!</span><p>No instala dependencias: funciona porque copia tu <code>node_modules</code> local. Si tuvieras dependencias nativas (bcrypt, sharp…) compiladas en Windows, fallarían en Linux.</p></div>
-        <div class="callout bad"><span class="ico">✕</span><p>En <code>docs/Dockerfile-example.md</code> tenés <code>COPY E/Development/pruebas-docker /home/app</code>: <b>no funciona</b>. COPY no acepta rutas absolutas de tu PC, solo rutas dentro del build context → <code>COPY . /home/app</code>.</p></div>
+        <div class="callout bad"><span class="ico">✕</span><p>Error común: <code>COPY E/Development/mi-proyecto /home/app</code> <b>no funciona</b>. COPY no acepta rutas absolutas de tu PC, solo rutas dentro del build context → <code>COPY . /home/app</code>.</p></div>
       </div>
 
       <div class="card t-ok">
@@ -133,6 +149,10 @@ CMD ["node", "app.js"]</code></pre>
       <div class="num" style="--tone:var(--c-vol)">3</div>
       <div class="titles"><h2>Node.js — imagen de desarrollo</h2><p>No copia el código: lo recibe por un <b>volumen (bind mount)</b> desde compose y <b>nodemon</b> recarga al guardar.</p></div>
     </div>
+    <div class="explain">
+      <p>Con la imagen de producción, cada cambio de código obliga a reconstruir la imagen (el código quedó <b>copiado</b> adentro). Para desarrollar eso es lento. La imagen de desarrollo no copia el código: en su lugar, Docker Compose <b>monta tu carpeta</b> dentro del contenedor (bind mount), así el contenedor ve tus archivos en vivo.</p>
+      <p><b>nodemon</b> es una herramienta de Node que reinicia la app automáticamente cada vez que un archivo cambia. Combinados: guardás en el editor y la app se reinicia sola, sin rebuild.</p>
+    </div>
     <div class="grid cols-2">
       <div class="card t-vol">
         <h3>Dockerfile.dev</h3>
@@ -169,6 +189,10 @@ CMD ["nodemon", "-L", "app.js"]</code></pre>
     <div class="section-head">
       <div class="num" style="--tone:var(--ok)">4</div>
       <div class="titles"><h2>Capas y caché</h2><p>Si una capa cambia, se reconstruyen <b>esa y todas las de abajo</b>. Lo que cambia poco va arriba.</p></div>
+    </div>
+    <div class="explain">
+      <p>Cada instrucción del Dockerfile produce una <b>capa</b>, y Docker las guarda. En el próximo <code>docker build</code>, recorre las instrucciones en orden: mientras la instrucción y los archivos que usa sean iguales, reutiliza la capa guardada (dice <code>CACHED</code>). En cuanto una cambia, rehace esa y todas las siguientes.</p>
+      <p>Por eso conviene copiar primero <code>package.json</code> e instalar dependencias, y recién después copiar el resto del código: el código cambia todo el tiempo, pero las dependencias casi nunca, y la instalación (lo más lento) queda en caché.</p>
     </div>
     <div class="diagram">
       <div class="svg-scroll">
@@ -227,6 +251,10 @@ CMD ["nodemon", "-L", "app.js"]</code></pre>
     <div class="section-head">
       <div class="num" style="--tone:var(--c-comp)">5</div>
       <div class="titles"><h2>Multi-stage build (ASP.NET Core / .NET 10)</h2><p>Una etapa con el SDK para <b>compilar</b>, otra solo con el runtime para <b>ejecutar</b>. La imagen final es mucho más liviana.</p></div>
+    </div>
+    <div class="explain">
+      <p>Algunos lenguajes (C#, Java, Go) necesitan <b>compilarse</b>: transformar el código fuente en un programa ejecutable. Para compilar hace falta el <b>SDK</b> (el kit de desarrollo completo, pesado); para ejecutar alcanza con el <b>runtime</b> (solo lo necesario para correr el programa, mucho más chico).</p>
+      <p>Un Dockerfile <b>multi-stage</b> usa los dos: una primera etapa con el SDK compila, y una segunda etapa con el runtime copia solo el resultado. La imagen final contiene únicamente la segunda etapa: más liviana y sin herramientas de compilación.</p>
     </div>
 
     <div class="diagram">
@@ -294,7 +322,7 @@ EXPOSE 8080
 ENTRYPOINT ["dotnet", "&lt;Proyecto&gt;.HttpApi.Host.dll"]</code></pre>
       </div>
       <div class="card t-comp">
-        <h3>Paso a paso (de tus notas)</h3>
+        <h3>Paso a paso</h3>
         <ol class="steps">
           <li>Etapa <b>build</b> con la imagen del <b>SDK</b> de .NET 10.</li>
           <li><code>WORKDIR /src</code>: nos paramos en una carpeta nueva del contenedor.</li>
@@ -370,7 +398,7 @@ docker-compose*.yml</code></pre>
 .git
 *.user
 **/appsettings.Development.json</code></pre>
-        <div class="callout info"><span class="ico">i</span><p>Tu proyecto <code>pruebas-docker</code> no tiene <code>.dockerignore</code>: el <code>COPY .</code> está copiando <code>node_modules</code> y <code>.git</code> dentro de la imagen.</p></div>
+        <div class="callout info"><span class="ico">i</span><p>Sin <code>.dockerignore</code>, un <code>COPY .</code> mete <code>node_modules</code> y <code>.git</code> dentro de la imagen: más pesada y más lenta de construir.</p></div>
       </div>
     </div>
   </section>

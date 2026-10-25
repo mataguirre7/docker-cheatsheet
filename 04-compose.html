@@ -28,7 +28,7 @@
   <div class="hero">
     <span class="eyebrow">Cheatsheet 04</span>
     <h1>Docker Compose</h1>
-    <p class="lead">Un archivo YAML que describe <b>todos los contenedores</b> de tu proyecto y cómo se conectan. Un solo comando lo levanta todo.</p>
+    <p class="lead">Cuando una app necesita varios contenedores (por ejemplo la API y su base de datos), levantarlos a mano con <code>docker run</code> es largo y fácil de equivocar. Docker Compose describe <b>todos los contenedores</b> del proyecto en un solo archivo, y los levanta (o los baja) con un comando.</p>
     <nav class="toc">
       <a href="#que-crea">Qué crea</a>
       <a href="#comandos">Comandos</a>
@@ -41,11 +41,30 @@
     </nav>
   </div>
 
+  <section class="terms-box">
+    <h2>Términos de esta página</h2>
+    <dl class="terms">
+      <dt>YAML</dt><dd>Un formato de texto para configuración. Usa <b>sangría con espacios</b> para indicar qué está dentro de qué, <code>clave: valor</code> para datos y <code>-</code> para listas.</dd>
+      <dt>docker-compose.yml</dt><dd>El archivo de Compose. Por defecto, <code>docker compose</code> busca ese nombre en la carpeta actual.</dd>
+      <dt>Servicio</dt><dd>Cada contenedor definido en el archivo (por ejemplo <code>chanchito</code> y <code>monguito</code>). Su nombre funciona además como dirección dentro de la red.</dd>
+      <dt>Proyecto</dt><dd>El conjunto de servicios de un archivo Compose. Toma el nombre de la carpeta y se usa como prefijo de contenedores, red y volúmenes.</dd>
+      <dt>Red por defecto</dt><dd>Compose crea una red para el proyecto y conecta ahí todos los servicios, así se encuentran por nombre sin configurar nada.</dd>
+      <dt>Volumen nombrado</dt><dd>Almacenamiento administrado por Docker que sobrevive a los contenedores; se declara al final del archivo, en <code>volumes:</code>.</dd>
+      <dt>Bind mount</dt><dd>Montar una carpeta de tu PC dentro del contenedor (<code>.:/home/app</code>). Se usa para desarrollo.</dd>
+      <dt>Variable de entorno</dt><dd>Un valor de configuración (<code>NOMBRE=valor</code>) que el contenedor lee al arrancar.</dd>
+      <dt>.env</dt><dd>Un archivo con variables (una por línea) que Compose lee solo. Se usa para no escribir contraseñas en el YAML; no se sube a git.</dd>
+      <dt>Healthcheck</dt><dd>Un chequeo periódico que dice si un servicio está realmente listo (por ejemplo, si la base de datos ya acepta conexiones).</dd>
+    </dl>
+  </section>
+
   <!-- ================= QUE CREA ================= -->
   <section class="block" id="que-crea">
     <div class="section-head">
       <div class="num" style="--tone:var(--c-comp)">1</div>
       <div class="titles"><h2>Qué pasa con <code>docker compose up</code></h2><p>Del YAML a contenedores, red y volumen.</p></div>
+    </div>
+    <div class="explain">
+      <p>Al correr <code>docker compose up</code> en la carpeta del archivo, Compose lee el YAML y hace por vos lo que harías con varios comandos: construye las imágenes que tengan <code>build</code>, descarga las que tengan <code>image</code>, crea una red para el proyecto, crea los volúmenes y arranca cada servicio con sus puertos y variables. <code>docker compose down</code> hace lo inverso: detiene y borra contenedores y red (los volúmenes quedan, salvo que agregues <code>-v</code>).</p>
     </div>
     <div class="diagram">
       <div class="svg-scroll">
@@ -70,12 +89,12 @@
 
         <!-- red -->
         <rect x="324" y="20" width="662" height="250" rx="18" class="d-net"/>
-        <text x="344" y="48" class="d-title"><tspan class="f-net">red automática:</tspan> pruebas-docker_default</text>
+        <text x="344" y="48" class="d-title"><tspan class="f-net">red automática:</tspan> mi-proyecto_default</text>
 
         <rect x="345" y="80" width="235" height="110" rx="14" class="d-cont"/>
         <text x="462" y="110" text-anchor="middle" class="d-title">chanchito</text>
         <text x="462" y="132" text-anchor="middle" class="d-sub">imagen construida del Dockerfile</text>
-        <text x="462" y="152" text-anchor="middle" class="d-lbl">pruebas-docker-chanchito</text>
+        <text x="462" y="152" text-anchor="middle" class="d-lbl">mi-proyecto-chanchito-1</text>
         <text x="462" y="176" text-anchor="middle" class="d-lbl">:3000</text>
 
         <rect x="735" y="80" width="230" height="110" rx="14" class="d-cont"/>
@@ -100,7 +119,7 @@
         <text x="475" y="320" text-anchor="middle" class="d-sub">tu PC → <tspan class="d-code">localhost:3000</tspan> · <tspan class="d-code">localhost:27017</tspan></text>
       </svg>
       </div>
-      <div class="callout info"><span class="ico">i</span><p>El prefijo <code>pruebas-docker_</code> sale del <b>nombre de la carpeta</b> (nombre del proyecto). Cambialo con <code>-p &lt;nombre&gt;</code> o con <code>name:</code> arriba del YAML.</p></div>
+      <div class="callout info"><span class="ico">i</span><p>El prefijo <code>mi-proyecto</code> sale del <b>nombre de la carpeta</b> (nombre del proyecto). Cambialo con <code>-p &lt;nombre&gt;</code> o con <code>name:</code> arriba del YAML.</p></div>
     </div>
   </section>
 
@@ -145,6 +164,17 @@ docker compose start</code></pre><div class="what">Detener / arrancar sin borrar
     <div class="section-head">
       <div class="num" style="--tone:var(--c-file)">3</div>
       <div class="titles"><h2>Claves del YAML</h2><p>Lo que va dentro de cada servicio.</p></div>
+    </div>
+    <div class="grid cols-2" style="margin-bottom:16px">
+      <div class="explain">
+        <p><b>Cómo leer YAML.</b> La sangría (espacios al principio de la línea) indica pertenencia: todo lo que está más a la derecha que <code>chanchito:</code> le pertenece a ese servicio. <code>clave: valor</code> es un dato; una línea que empieza con <code>- </code> es un elemento de una lista.</p>
+        <p>Usá siempre la misma cantidad de espacios (2 es lo habitual) y <b>nunca tabs</b>: un error de sangría cambia el significado o rompe el archivo.</p>
+      </div>
+      <pre><code data-lang="yaml">services:            # nivel 0: sección
+  chanchito:         # nivel 1: un servicio
+    image: node:22   # nivel 2: dato del servicio
+    ports:           # nivel 2: una lista...
+      - "3000:3000"  # ...con un elemento</code></pre>
     </div>
     <div class="card t-file wide">
       <h3>Referencia de claves</h3>

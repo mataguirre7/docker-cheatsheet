@@ -30,7 +30,7 @@
   <div class="hero">
     <span class="eyebrow">Cheatsheet 01</span>
     <h1>Conceptos clave de Docker</h1>
-    <p class="lead">Las piezas y cómo se conectan: imagen, contenedor, puertos, redes y volúmenes. Si entendés estos diagramas, los comandos se explican solos.</p>
+    <p class="lead">Las piezas de Docker y cómo se conectan: imagen, contenedor, puertos, redes y volúmenes. Si recién empezás, hacé antes la guía <a href="00-empezar.html">Empezar desde cero</a>; esta página explica el porqué de lo que hiciste ahí.</p>
     <nav class="toc">
       <a href="#flujo">Flujo general</a>
       <a href="#glosario">Glosario</a>
@@ -42,11 +42,34 @@
     </nav>
   </div>
 
+  <section class="terms-box">
+    <h2>Términos de esta página</h2>
+    <p>Definiciones cortas para tener a mano. Cada una se desarrolla abajo.</p>
+    <dl class="terms">
+      <dt>Imagen</dt><dd>Plantilla de solo lectura con un sistema base, las dependencias y tu app. No “corre”: es lo que se usa para crear contenedores.</dd>
+      <dt>Contenedor</dt><dd>Una imagen en ejecución: un proceso aislado con sus propios archivos, red y procesos. De una imagen se pueden crear muchos contenedores.</dd>
+      <dt>Dockerfile</dt><dd>Archivo de texto con los pasos para construir una imagen propia.</dd>
+      <dt>Registry</dt><dd>Un servidor que guarda imágenes. <b>Docker Hub</b> es el público por defecto.</dd>
+      <dt>Tag</dt><dd>La versión de una imagen: en <code>node:18</code>, <code>18</code> es el tag. Sin tag, Docker usa <code>latest</code>.</dd>
+      <dt>ID</dt><dd>Identificador único de un contenedor o imagen (un código largo). Para los comandos alcanza con los primeros caracteres o con el nombre.</dd>
+      <dt>Puerto</dt><dd>El número por el que un programa recibe conexiones de red. Mapear un puerto conecta uno de tu PC con uno del contenedor.</dd>
+      <dt>Red (network)</dt><dd>Una red virtual que conecta contenedores para que se hablen entre sí por nombre.</dd>
+      <dt>Volumen</dt><dd>Almacenamiento que vive fuera del contenedor, para que los datos no se pierdan al borrarlo.</dd>
+      <dt>Bind mount</dt><dd>Mostrar una carpeta de tu PC dentro del contenedor. Los cambios se ven de los dos lados al instante.</dd>
+      <dt>Build context</dt><dd>La carpeta que le pasás a <code>docker build</code>; el Dockerfile solo puede copiar archivos que estén dentro de ella.</dd>
+      <dt>Docker Compose</dt><dd>Una herramienta para definir y levantar varios contenedores juntos desde un archivo YAML.</dd>
+    </dl>
+  </section>
+
   <!-- ================= FLUJO ================= -->
   <section class="block" id="flujo">
     <div class="section-head">
       <div class="num" style="--tone:var(--c-img)">1</div>
       <div class="titles"><h2>El flujo general</h2><p>De una receta (o de Docker Hub) a un proceso corriendo.</p></div>
+    </div>
+    <div class="explain">
+      <p>Hay dos formas de conseguir una imagen: <b>descargarla</b> ya hecha de Docker Hub (<code>docker pull</code>), como <code>mongo</code> o <code>nginx</code>, o <b>construirla</b> vos con un Dockerfile (<code>docker build</code>), que es lo que hacés con tu propia app.</p>
+      <p>Con una imagen creás un <b>contenedor</b> (<code>docker create</code>) y lo arrancás (<code>docker start</code>). Como casi siempre se hacen esos pasos juntos, existe <code>docker run</code>, que descarga si hace falta, crea y arranca de una sola vez. La relación es como la de un instalador y el programa instalado: de una misma imagen podés crear muchos contenedores independientes.</p>
     </div>
 
     <div class="diagram">
@@ -178,6 +201,10 @@
       <div class="num" style="--tone:var(--c-cont)">3</div>
       <div class="titles"><h2>Ciclo de vida de un contenedor</h2><p>Qué comando lo lleva de un estado a otro.</p></div>
     </div>
+    <div class="explain">
+      <p>Un contenedor pasa por estados, igual que un programa que abrís y cerrás. Recién creado está <b>created</b> (existe pero no hace nada); al arrancarlo pasa a <b>running</b>; si lo detenés o el programa termina, queda <b>exited</b>, que es como “apagado pero guardado”: conserva sus archivos internos y se puede volver a arrancar. Recién con <code>docker rm</code> desaparece del todo.</p>
+      <p>Clave: un contenedor vive mientras vive su <b>proceso principal</b> (el comando del <code>CMD</code>). Si ese programa termina o se cae, el contenedor pasa a exited.</p>
+    </div>
     <div class="diagram">
       <div class="svg-scroll">
       <svg viewBox="0 0 1000 300" role="img" aria-label="Estados del contenedor: created, running, paused, exited, removed">
@@ -237,6 +264,10 @@
       <div class="num" style="--tone:var(--c-cont)">4</div>
       <div class="titles"><h2>Mapeo de puertos</h2><p><code>-p HOST:CONTENEDOR</code> — siempre primero tu PC, después el contenedor.</p></div>
     </div>
+    <div class="explain">
+      <p>Un contenedor tiene su propia red aislada: aunque tu app escuche en el puerto 3000 <b>adentro</b>, desde tu PC no se puede entrar hasta que “abrís una puerta”. Eso es el mapeo de puertos: <code>-p 3000:3000</code> dice “lo que llegue al puerto 3000 de mi PC, mandalo al puerto 3000 del contenedor”.</p>
+      <p>El número de la izquierda lo elegís vos (tiene que estar libre en tu PC); el de la derecha es donde realmente escucha la app.</p>
+    </div>
     <div class="diagram">
       <div class="svg-scroll">
       <svg viewBox="0 0 1000 250" role="img" aria-label="El puerto 3000 del host se redirige al puerto 3000 del contenedor">
@@ -283,6 +314,10 @@
       <div class="num" style="--tone:var(--c-net)">5</div>
       <div class="titles"><h2>Redes: cómo se habla la app con la base de datos</h2><p>En una misma red, el <b>nombre del contenedor/servicio</b> funciona como hostname.</p></div>
     </div>
+    <div class="explain">
+      <p>Cuando tu app necesita conectarse a una base de datos que corre en otro contenedor, no puede usar <code>localhost</code>: para un contenedor, <code>localhost</code> es <b>él mismo</b>. La solución es poner los dos contenedores en la misma <b>red de Docker</b>. Dentro de esa red, cada contenedor se encuentra por su nombre, como si fuera una dirección web: el contenedor <code>monguito</code> es accesible en <code>monguito:27017</code>.</p>
+      <p>El <b>hostname</b> es el nombre de una máquina en la red; Docker hace que el nombre de cada contenedor funcione como hostname gracias a un DNS interno (un “directorio” que traduce nombres a direcciones).</p>
+    </div>
     <div class="diagram">
       <div class="svg-scroll">
       <svg viewBox="0 0 1000 320" role="img" aria-label="chanchito y monguito en la misma red; chanchito se conecta a monguito:27017">
@@ -323,6 +358,10 @@
     <div class="section-head">
       <div class="num" style="--tone:var(--c-vol)">6</div>
       <div class="titles"><h2>Volúmenes: persistir y compartir archivos</h2><p>Dos sabores con la misma sintaxis <code>ORIGEN:DESTINO-EN-CONTENEDOR</code>.</p></div>
+    </div>
+    <div class="explain">
+      <p>Todo lo que un contenedor escribe adentro se pierde cuando lo borrás. Para una base de datos eso es un problema: cada vez que recreás el contenedor, perdés los datos. Un <b>volumen</b> es una carpeta que vive <b>fuera</b> del contenedor y se “monta” en una ruta de adentro: el contenedor escribe ahí como siempre, pero los datos quedan guardados aunque lo borres y crees otro.</p>
+      <p><b>Persistir</b> significa justamente eso: que los datos sobrevivan. Hay dos tipos: el <b>volumen nombrado</b>, que administra Docker (ideal para datos), y el <b>bind mount</b>, que es una carpeta de tu PC (ideal para ver tu código en vivo mientras desarrollás).</p>
     </div>
     <div class="grid cols-2">
       <div class="diagram">
@@ -424,7 +463,7 @@
   </section>
 
   <footer class="foot">
-    <span>Docker Cheatsheets · basado en tus notas y el proyecto <code>pruebas-docker</code></span>
+    <span>Docker Cheatsheets</span>
     <a href="02-comandos.html">Siguiente: Comandos CLI →</a>
   </footer>
 </main>

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Empezar con Docker desde cero en Windows: instalar Docker Desktop, verificar, primer contenedor y empaquetar tu propia app paso a paso.">
+<meta name="theme-color" content="#0969da">
+<title>Docker · Empezar desde cero</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B3%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="empezar">
+<header class="topbar"></header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow">Cheatsheet 00</span>
+    <h1>Empezar con Docker desde cero</h1>
+    <p class="lead">Una guía para hacer en orden, en Windows. Al terminar vas a tener Docker instalado, vas a haber corrido tu primer contenedor y vas a haber empaquetado una app propia en una imagen. Cada paso explica qué hace y muestra lo que deberías ver.</p>
+    <nav class="toc">
+      <a href="#que-es">Qué es Docker</a>
+      <a href="#instalar">1 · Instalar</a>
+      <a href="#verificar">2 · Verificar</a>
+      <a href="#primer">3 · Primer contenedor</a>
+      <a href="#ciclo">4 · Ver, parar y borrar</a>
+      <a href="#propia">5 · Tu propia imagen</a>
+      <a href="#siguiente">Siguientes pasos</a>
+    </nav>
+  </div>
+
+  <section class="terms-box">
+    <h2>Términos de esta página</h2>
+    <p>Las ideas con más detalle y diagramas están en <a href="01-conceptos.html">Conceptos</a>.</p>
+    <dl class="terms">
+      <dt>Docker</dt><dd>Una herramienta para empaquetar una aplicación junto con todo lo que necesita (sistema base, dependencias, configuración) y correrla igual en cualquier computadora.</dd>
+      <dt>Imagen</dt><dd>El paquete: una plantilla de solo lectura con la app y su entorno. Se descarga de internet o se construye con un Dockerfile.</dd>
+      <dt>Contenedor</dt><dd>Una imagen en ejecución. Es un proceso aislado: tiene sus propios archivos, red y procesos, pero comparte el núcleo del sistema con tu PC (por eso arranca en segundos).</dd>
+      <dt>Docker Desktop</dt><dd>El programa que instala Docker en Windows y Mac. Trae el motor, la terminal <code>docker</code> y una ventana para ver contenedores e imágenes.</dd>
+      <dt>Motor (daemon)</dt><dd>El servicio de fondo que realmente crea y corre los contenedores. El comando <code>docker</code> solo le da órdenes. Si Docker Desktop está cerrado, el motor no corre.</dd>
+      <dt>WSL 2</dt><dd><i>Windows Subsystem for Linux</i>: la función de Windows que permite correr Linux por dentro. Docker Desktop la usa porque la mayoría de las imágenes son de Linux.</dd>
+      <dt>Docker Hub</dt><dd>El catálogo público de imágenes en internet (<code>hub.docker.com</code>): ahí están <code>nginx</code>, <code>node</code>, <code>mongo</code> y miles más.</dd>
+      <dt>Tag</dt><dd>La versión de una imagen, después de los dos puntos: en <code>node:22</code> el tag es <code>22</code>. Sin tag se usa <code>latest</code>.</dd>
+      <dt>Puerto</dt><dd>El “número de puerta” por el que se habla con un programa en red. <code>-p 8080:80</code> conecta el puerto 8080 de tu PC con el 80 del contenedor.</dd>
+      <dt>Dockerfile</dt><dd>Un archivo de texto con las instrucciones para construir tu propia imagen.</dd>
+    </dl>
+  </section>
+
+  <!-- ================= QUE ES ================= -->
+  <section class="block" id="que-es">
+    <div class="section-head">
+      <div class="num">0</div>
+      <div class="titles"><h2>Qué problema resuelve Docker</h2></div>
+    </div>
+    <div class="explain">
+      <p>El clásico “en mi máquina funciona”: una app necesita cierta versión de Node, una base de datos, variables de entorno y librerías del sistema. Instalar todo eso a mano en cada computadora (la tuya, la de un compañero, el servidor) es lento y siempre algo queda distinto.</p>
+      <p>Docker empaqueta la app <b>con su entorno</b> en una <b>imagen</b>. Esa imagen corre igual en cualquier lado que tenga Docker. Y como cada contenedor está aislado, podés tener una app con Node 18 y otra con Node 22 en la misma PC sin que se peleen, o levantar una base de datos sin instalarla.</p>
+      <p><b>¿Es una máquina virtual?</b> No exactamente. Una máquina virtual simula una computadora entera con su propio sistema operativo: pesa gigas y tarda en arrancar. Un contenedor comparte el núcleo del sistema y solo aísla la app: pesa megas y arranca en segundos.</p>
+    </div>
+  </section>
+
+  <!-- ================= INSTALAR ================= -->
+  <section class="block" id="instalar">
+    <div class="section-head">
+      <div class="num">1</div>
+      <div class="titles"><h2>Instalar Docker Desktop</h2><p>Una sola vez por computadora. Necesita Windows 10/11 de 64 bits.</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Instalación</h3>
+        <div class="cmd"><pre><code>winget install -e --id Docker.DockerDesktop</code></pre><div class="what">Instala Docker Desktop desde la terminal (PowerShell). También podés bajar el instalador desde <code>docker.com</code> y dejar las opciones por defecto (“Use WSL 2” marcado).</div></div>
+        <div class="cmd"><pre><code>wsl --install</code></pre><div class="what">Solo si Docker Desktop te avisa que falta WSL 2. Requiere permisos de administrador y reiniciar la PC.</div></div>
+        <div class="callout warn"><span class="ico">!</span><p>Reiniciá la PC cuando el instalador lo pida.</p></div>
+      </div>
+      <div class="card">
+        <h3>Primer arranque</h3>
+        <ol class="steps">
+          <li>Abrí <b>Docker Desktop</b> desde el menú Inicio.</li>
+          <li>Aceptá los términos. Iniciar sesión con una cuenta de Docker es opcional: podés tocar <b>Skip</b>.</li>
+          <li>Esperá a que abajo a la izquierda diga <b>Engine running</b> (el motor está listo).</li>
+        </ol>
+        <div class="callout info"><span class="ico">i</span><p>Docker Desktop tiene que estar <b>abierto</b> (puede quedar minimizado en la bandeja) para que funcionen los comandos <code>docker</code>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= VERIFICAR ================= -->
+  <section class="block" id="verificar">
+    <div class="section-head">
+      <div class="num">2</div>
+      <div class="titles"><h2>Verificar que funciona</h2><p>En una terminal nueva (PowerShell o la de VS Code).</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="cmd"><pre><code>docker version</code></pre><div class="what">Muestra dos partes: <b>Client</b> (el comando <code>docker</code>) y <b>Server</b> (el motor). Si aparecen las dos, está todo bien.</div></div>
+        <pre class="out"><code data-lang="plain">Client:
+ Version:           28.x.x
+ ...
+Server: Docker Desktop
+ Engine:
+  Version:          28.x.x</code></pre>
+        <div class="callout bad"><span class="ico">✕</span><p>Si aparece Client pero en Server dice <i>“error during connect”</i>, Docker Desktop está cerrado o todavía arrancando.</p></div>
+      </div>
+      <div class="card">
+        <div class="cmd"><pre><code>docker run hello-world</code></pre><div class="what">Descarga una imagen de prueba mínima, crea un contenedor que imprime un mensaje y termina.</div></div>
+        <pre class="out"><code data-lang="plain">Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+...
+Hello from Docker!
+This message shows that your installation appears to be working correctly.</code></pre>
+        <div class="explain" style="margin-top:8px"><p><i>Unable to find image locally</i> no es un error: como no la tenías, la bajó de Docker Hub (<i>Pulling</i>). La segunda vez ya no la descarga.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRIMER CONTENEDOR ================= -->
+  <section class="block" id="primer">
+    <div class="section-head">
+      <div class="num">3</div>
+      <div class="titles"><h2>Tu primer contenedor útil: un servidor web</h2></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="cmd"><pre><code>docker run -d --name web -p 8080:80 nginx</code></pre><div class="what">Corre <b>nginx</b> (un servidor web) en un contenedor. Parte por parte:
+          <ul>
+            <li><code>run</code>: descarga la imagen si hace falta, crea el contenedor y lo arranca.</li>
+            <li><code>-d</code>: en segundo plano (<i>detached</i>), así te devuelve la terminal.</li>
+            <li><code>--name web</code>: le pone un nombre para referirte a él.</li>
+            <li><code>-p 8080:80</code>: el puerto 8080 de tu PC lleva al 80 del contenedor (donde escucha nginx).</li>
+            <li><code>nginx</code>: la imagen a usar.</li>
+          </ul></div></div>
+        <pre class="out"><code data-lang="plain">3f9c1d2e8a7b...   ← el ID del contenedor nuevo</code></pre>
+      </div>
+      <div class="card">
+        <h3>Probarlo</h3>
+        <div class="explain"><p>Abrí <code>http://localhost:8080</code> en el navegador: tiene que aparecer <b>“Welcome to nginx!”</b>. Esa página la está sirviendo el contenedor.</p><p><code>localhost</code> significa “esta misma computadora”.</p></div>
+        <div class="callout info"><span class="ico">i</span><p>Si el puerto 8080 ya lo usa otro programa, elegí otro del lado izquierdo: <code>-p 8081:80</code> y entrá a <code>localhost:8081</code>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CICLO ================= -->
+  <section class="block" id="ciclo">
+    <div class="section-head">
+      <div class="num">4</div>
+      <div class="titles"><h2>Ver, mirar logs, parar y borrar</h2></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="cmd"><pre><code>docker ps</code></pre><div class="what">Lista los contenedores que están corriendo.</div></div>
+        <pre class="out"><code data-lang="plain">CONTAINER ID   IMAGE   COMMAND                  STATUS         PORTS                  NAMES
+3f9c1d2e8a7b   nginx   "/docker-entrypoint.…"   Up 2 minutes   0.0.0.0:8080-&gt;80/tcp   web</code></pre>
+        <div class="explain" style="margin-top:8px"><p><b>STATUS</b> “Up” = corriendo. <b>PORTS</b> muestra el mapeo de puertos. <b>NAMES</b> es el nombre que le diste.</p></div>
+        <div class="cmd"><pre><code>docker logs web</code></pre><div class="what">Lo que el programa imprimió (cada visita a la página deja una línea). Con <code>-f</code> se queda mostrando las nuevas; <kbd>Ctrl</kbd>+<kbd>C</kbd> para salir.</div></div>
+      </div>
+      <div class="card">
+        <div class="cmd"><pre><code>docker stop web</code></pre><div class="what">Detiene el contenedor. Sigue existiendo (aparece en <code>docker ps -a</code>) y se puede volver a arrancar con <code>docker start web</code>.</div></div>
+        <div class="cmd"><pre><code>docker rm web</code></pre><div class="what">Borra el contenedor detenido. La imagen <code>nginx</code> queda descargada para la próxima vez.</div></div>
+        <div class="cmd"><pre><code>docker images</code></pre><div class="what">Las imágenes que tenés descargadas o construidas. Para borrar una: <code>docker image rm nginx</code>.</div></div>
+        <div class="callout tip"><span class="ico">✓</span><p>Todo esto también se ve y se hace con botones desde la ventana de Docker Desktop (secciones <b>Containers</b> e <b>Images</b>).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROPIA ================= -->
+  <section class="block" id="propia">
+    <div class="section-head">
+      <div class="num">5</div>
+      <div class="titles"><h2>Empaquetar tu propia app</h2><p>Una app Node mínima, de cero a contenedor.</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>a) Los archivos</h3>
+        <div class="explain"><p>Creá una carpeta <code>hola-docker</code> con estos dos archivos (con tu editor):</p></div>
+        <div class="code-label"><span class="file">app.js</span></div>
+        <pre><code data-lang="plain">const http = require("node:http");
+
+http.createServer((req, res) =&gt; {
+  res.end("Hola desde un contenedor\n");
+}).listen(3000, () =&gt; console.log("escuchando en 3000"));</code></pre>
+        <div class="code-label"><span class="file">Dockerfile</span><span>sin extensión</span></div>
+        <pre><code data-lang="dockerfile"># 1. partir de una imagen que ya trae Node
+FROM node:22-alpine
+
+# 2. carpeta de trabajo dentro del contenedor
+WORKDIR /app
+
+# 3. copiar el código de tu PC a la imagen
+COPY app.js .
+
+# 4. documentar el puerto donde escucha la app
+EXPOSE 3000
+
+# 5. comando que se ejecuta al arrancar el contenedor
+CMD ["node", "app.js"]</code></pre>
+        <div class="explain" style="margin-top:8px"><p><code>node:22-alpine</code> es Node 22 sobre <b>Alpine</b>, un Linux muy liviano. Esta app no usa dependencias externas, así que no hace falta <code>package.json</code> ni <code>npm install</code>.</p></div>
+      </div>
+      <div class="card">
+        <h3>b) Construir la imagen</h3>
+        <div class="cmd"><pre><code>cd hola-docker
+docker build -t hola:1 .</code></pre><div class="what"><code>build</code> lee el <code>Dockerfile</code> y arma la imagen. <code>-t hola:1</code> le pone nombre y versión. El <code>.</code> final indica la carpeta con los archivos (el <i>contexto de build</i>): no te lo olvides.</div></div>
+        <pre class="out"><code data-lang="plain">[+] Building 8.2s (8/8) FINISHED
+ =&gt; [1/3] FROM docker.io/library/node:22-alpine
+ =&gt; [2/3] WORKDIR /app
+ =&gt; [3/3] COPY app.js .
+ =&gt; naming to docker.io/library/hola:1</code></pre>
+        <h3 style="margin-top:12px">c) Correrla</h3>
+        <div class="cmd"><pre><code>docker run -d --name hola -p 3000:3000 hola:1</code></pre><div class="what">Igual que con nginx, pero con tu imagen. Abrí <code>http://localhost:3000</code>: dice “Hola desde un contenedor”.</div></div>
+        <h3 style="margin-top:12px">d) Cambiar el código</h3>
+        <div class="explain"><p>La imagen tiene una <b>copia</b> del código del momento del build. Si editás <code>app.js</code>, para ver el cambio hay que reconstruir y recrear el contenedor:</p></div>
+        <div class="cmd"><pre><code>docker rm -f hola
+docker build -t hola:2 .
+docker run -d --name hola -p 3000:3000 hola:2</code></pre><div class="what"><code>rm -f</code> detiene y borra en un paso. Para no hacer esto en cada cambio durante el desarrollo, existe el “bind mount” (ver <a href="04-compose.html#dev">Compose de desarrollo</a>).</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SIGUIENTE ================= -->
+  <section class="block" id="siguiente">
+    <div class="section-head">
+      <div class="num">6</div>
+      <div class="titles"><h2>Siguientes pasos</h2></div>
+    </div>
+    <div class="card">
+      <ol class="steps">
+        <li><a href="01-conceptos.html"><b>Conceptos</b></a>: el ciclo de vida de un contenedor, puertos, redes y volúmenes, con diagramas.</li>
+        <li><a href="02-comandos.html"><b>Comandos CLI</b></a>: todos los comandos de <code>docker</code> explicados, con buscador.</li>
+        <li><a href="03-dockerfile.html"><b>Dockerfile</b></a>: escribir imágenes de producción y de desarrollo.</li>
+        <li><a href="04-compose.html"><b>Docker Compose</b></a>: levantar una app con su base de datos con un solo comando.</li>
+        <li><a href="05-problemas.html"><b>Problemas comunes</b></a>: cuando algo no arranca.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <a href="index.html">← Inicio</a>
+    <a href="01-conceptos.html">Siguiente: Conceptos →</a>
+  </footer>
+</main>
+</body>
+</html>

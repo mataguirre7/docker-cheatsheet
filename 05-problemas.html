@@ -43,6 +43,23 @@
     </nav>
   </div>
 
+  <section class="terms-box">
+    <h2>Antes de buscar: cómo diagnosticar</h2>
+    <p>Casi todos los problemas se aclaran con estos tres comandos, que no modifican nada:</p>
+    <dl class="terms">
+      <dt><code>docker ps -a</code></dt><dd>Lista todos los contenedores con su <b>STATUS</b>: “Up” está corriendo; “Exited (1)” terminó con un error (el número es el <i>exit code</i>: 0 = terminó bien, cualquier otro = falló).</dd>
+      <dt><code>docker logs &lt;nombre&gt;</code></dt><dd>Lo que imprimió el programa. El mensaje de error real de tu app casi siempre está acá.</dd>
+      <dt><code>docker inspect &lt;nombre&gt;</code></dt><dd>Toda la configuración del contenedor: puertos, variables, volúmenes, red.</dd>
+    </dl>
+    <p style="margin-top:12px">Palabras que aparecen en los errores:</p>
+    <dl class="terms">
+      <dt>daemon / engine</dt><dd>El motor de Docker que corre de fondo (en Windows, dentro de Docker Desktop).</dd>
+      <dt>ECONNREFUSED</dt><dd>“Conexión rechazada”: no había ningún programa escuchando en esa dirección y puerto.</dd>
+      <dt>ENOTFOUND</dt><dd>“No encontrado”: el nombre de host no existe en esa red (por ejemplo, un contenedor que no está en la misma red).</dd>
+      <dt>bind / allocated</dt><dd>Relacionado con “ocupar” un puerto: <i>already allocated</i> significa que el puerto ya está en uso.</dd>
+    </dl>
+  </section>
+
   <!-- ================= CONEXION ================= -->
   <section class="block" id="conexion" data-search>
     <div class="section-head">

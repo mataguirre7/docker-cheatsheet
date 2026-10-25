@@ -1,11 +1,12 @@
 # 🐳 Docker Cheatsheets
 
-Cheatsheets visuales de Docker en español: diagramas, comandos con buscador, botón copiar y tema claro/oscuro.
+Cheatsheets de Docker en español, pensadas para quien empieza: cada página explica sus términos y hay una guía para pasar de cero a una app propia en un contenedor. Incluyen diagramas, comandos con buscador, botón copiar y tema claro/oscuro.
 Sitio 100 % estático (HTML + CSS + JS, sin build ni dependencias).
 
 | Hoja | Contenido |
 |---|---|
-| `index.html` | Portada, buscador “Quiero…” y descargas en PNG |
+| `index.html` | Portada, orden recomendado, buscador “Quiero…” y descargas en PNG |
+| `00-empezar.html` | Instalar Docker Desktop, verificar, primer contenedor y tu propia imagen, paso a paso |
 | `01-conceptos.html` | Imagen vs contenedor, ciclo de vida, puertos, redes y volúmenes |
 | `02-comandos.html` | CLI completa: imágenes, contenedores, `run`, logs, `exec`, redes, volúmenes, limpieza |
 | `03-dockerfile.html` | Instrucciones, capas y caché, Node prod/dev, multi-stage .NET, `.dockerignore` |

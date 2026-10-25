@@ -16,6 +16,7 @@
     other: { label: "Kubernetes", href: "", icon: "helm" },
     pages: [
       { id: "inicio",     href: "index.html",          label: "Inicio" },
+      { id: "empezar",    href: "00-empezar.html",     label: "Empezar" },
       { id: "conceptos",  href: "01-conceptos.html",   label: "Conceptos" },
       { id: "comandos",   href: "02-comandos.html",    label: "Comandos CLI" },
       { id: "dockerfile", href: "03-dockerfile.html",  label: "Dockerfile" },

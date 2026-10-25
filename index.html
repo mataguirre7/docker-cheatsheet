@@ -16,9 +16,9 @@
 <main class="wrap">
 
   <div class="hero">
-    <span class="eyebrow">Referencia personal</span>
+    <span class="eyebrow">Referencia y guía</span>
     <h1>Docker Cheatsheets</h1>
-    <p class="lead">Todo lo de tus notas y del proyecto <code>pruebas-docker</code>, ordenado en hojas visuales. Buscá lo que querés hacer y copiá el comando.</p>
+    <p class="lead">Docker empaqueta una aplicación con todo lo que necesita para funcionar, y la corre igual en cualquier computadora. Estas hojas explican cada concepto desde cero y sirven después como referencia rápida: buscá lo que querés hacer y copiá el comando.</p>
     <div class="toolbar">
       <label class="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -28,9 +28,35 @@
     </div>
   </div>
 
+  <!-- ================= RUTA ================= -->
+  <section class="block">
+    <div class="section-head">
+      <div class="titles"><h2>Por dónde empezar</h2><p>Si nunca usaste Docker, seguí este orden.</p></div>
+    </div>
+    <div class="card">
+      <ol class="steps">
+        <li><a href="00-empezar.html"><b>Empezar desde cero</b></a>: instalar Docker Desktop, correr el primer contenedor y empaquetar una app propia.</li>
+        <li><a href="01-conceptos.html"><b>Conceptos</b></a>: qué es cada pieza (imagen, contenedor, puertos, redes, volúmenes), con diagramas.</li>
+        <li><a href="03-dockerfile.html"><b>Dockerfile</b></a> y <a href="04-compose.html"><b>Docker Compose</b></a>: armar tus imágenes y levantar una app con su base de datos.</li>
+        <li><a href="02-comandos.html"><b>Comandos CLI</b></a> y <a href="05-problemas.html"><b>Problemas comunes</b></a>: para consultar cuando los necesites.</li>
+      </ol>
+    </div>
+  </section>
+
   <!-- ================= HOJAS ================= -->
   <section class="block">
+    <div class="section-head">
+      <div class="titles"><h2>Las hojas</h2></div>
+    </div>
     <div class="grid cols-3">
+      <a class="card sheet-card t-ok" href="00-empezar.html">
+        <div class="top">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg></div>
+          <div><span class="tag">00</span><h3>Empezar desde cero</h3></div>
+        </div>
+        <p>Instalar Docker Desktop, verificar, primer contenedor y tu propia imagen, paso a paso con la salida esperada.</p>
+        <div class="chips"><span>hello-world</span><span>docker run</span><span>docker build</span></div>
+      </a>
       <a class="card sheet-card t-img" href="01-conceptos.html">
         <div class="top">
           <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg></div>
@@ -158,6 +184,7 @@ docker stop &lt;nombre&gt;</code></pre></div>
           <thead><tr><th>Hoja</th><th>Tema oscuro</th><th>Tema claro</th></tr></thead>
           <tbody>
             <tr><td>Inicio</td><td><a href="img/index-dark.png" download>index-dark.png</a></td><td><a href="img/index-light.png" download>index-light.png</a></td></tr>
+            <tr><td>00 · Empezar desde cero</td><td><a href="img/00-empezar-dark.png" download>00-empezar-dark.png</a></td><td><a href="img/00-empezar-light.png" download>00-empezar-light.png</a></td></tr>
             <tr><td>01 · Conceptos</td><td><a href="img/01-conceptos-dark.png" download>01-conceptos-dark.png</a></td><td><a href="img/01-conceptos-light.png" download>01-conceptos-light.png</a></td></tr>
             <tr><td>02 · Comandos CLI</td><td><a href="img/02-comandos-dark.png" download>02-comandos-dark.png</a></td><td><a href="img/02-comandos-light.png" download>02-comandos-light.png</a></td></tr>
             <tr><td>03 · Dockerfile</td><td><a href="img/03-dockerfile-dark.png" download>03-dockerfile-dark.png</a></td><td><a href="img/03-dockerfile-light.png" download>03-dockerfile-light.png</a></td></tr>
@@ -172,7 +199,7 @@ docker stop &lt;nombre&gt;</code></pre></div>
   <p class="empty">Nada por acá. Probá en <a href="02-comandos.html">Comandos CLI</a> o en <a href="05-problemas.html">Problemas comunes</a>.</p>
 
   <footer class="foot">
-    <span>Fuentes: <code>Docker Cheatsheet.txt</code>, <code>dockerfile-compose.txt</code>, <code>pruebas-docker/</code></span>
+    <span>Docker Cheatsheets · ejemplos con una app Node + MongoDB</span>
     <a href="01-conceptos.html">Empezar por Conceptos →</a>
   </footer>
 </main>
