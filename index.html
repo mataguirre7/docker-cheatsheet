@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Cheatsheets visuales de Docker en español: comandos, Dockerfile, Docker Compose y solución de problemas.">
+<meta name="theme-color" content="#1d63ed">
+<title>Docker Cheatsheets</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B3%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="inicio">
+<header class="topbar"></header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow">Referencia personal</span>
+    <h1>Docker Cheatsheets</h1>
+    <p class="lead">Todo lo de tus notas y del proyecto <code>pruebas-docker</code>, ordenado en hojas visuales. Buscá lo que querés hacer y copiá el comando.</p>
+    <div class="toolbar">
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Quiero… ver logs, entrar al contenedor, borrar todo…" autocomplete="off" aria-label="Buscar qué querés hacer">
+        <span class="hint"><kbd>/</kbd></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ================= HOJAS ================= -->
+  <section class="block">
+    <div class="grid cols-3">
+      <a class="card sheet-card t-img" href="01-conceptos.html">
+        <div class="top">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg></div>
+          <div><span class="tag">01</span><h3>Conceptos</h3></div>
+        </div>
+        <p>Imagen vs contenedor, ciclo de vida, puertos, redes y volúmenes en diagramas.</p>
+        <div class="chips"><span>imagen</span><span>-p HOST:CONT</span><span>network</span><span>volume</span></div>
+      </a>
+      <a class="card sheet-card t-cont" href="02-comandos.html">
+        <div class="top">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg></div>
+          <div><span class="tag">02</span><h3>Comandos CLI</h3></div>
+        </div>
+        <p>pull, run, ps, logs, exec, redes, volúmenes, limpieza. Con buscador y botón copiar.</p>
+        <div class="chips"><span>docker run</span><span>docker ps -a</span><span>logs -f</span><span>exec -it</span></div>
+      </a>
+      <a class="card sheet-card t-file" href="03-dockerfile.html">
+        <div class="top">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg></div>
+          <div><span class="tag">03</span><h3>Dockerfile</h3></div>
+        </div>
+        <p>Instrucciones, Node prod/dev, capas y caché, multi-stage .NET, .dockerignore.</p>
+        <div class="chips"><span>FROM</span><span>WORKDIR</span><span>COPY</span><span>CMD</span></div>
+      </a>
+      <a class="card sheet-card t-comp" href="04-compose.html">
+        <div class="top">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+          <div><span class="tag">04</span><h3>Docker Compose</h3></div>
+        </div>
+        <p>Comandos, claves del YAML, tus archivos prod y dev comentados, .env y varios servicios.</p>
+        <div class="chips"><span>up --build</span><span>down -v</span><span>-f dev.yml</span><span>depends_on</span></div>
+      </a>
+      <a class="card sheet-card t-bad" href="05-problemas.html">
+        <div class="top">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+          <div><span class="tag">05</span><h3>Problemas comunes</h3></div>
+        </div>
+        <p>Pegá el error y encontrá la causa y la solución.</p>
+        <div class="chips"><span>port allocated</span><span>ECONNREFUSED</span><span>Exited (1)</span></div>
+      </a>
+      <div class="card t-ok">
+        <span class="tag">Atajos</span>
+        <h3>Cómo usar estas hojas</h3>
+        <ul>
+          <li><kbd>/</kbd> enfoca el buscador · <kbd>Esc</kbd> lo limpia</li>
+          <li>Pasá el mouse por un bloque de código → botón <b>copiar</b></li>
+          <li><span style="color:#ff8fc8;font-family:var(--mono)">&lt;rosa&gt;</span> = valor a reemplazar</li>
+          <li>Botón ☀/☾ arriba a la derecha: tema claro/oscuro</li>
+          <li><kbd>Ctrl</kbd>+<kbd>P</kbd> → “Guardar como PDF” para imprimirla</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= QUIERO ================= -->
+  <section class="block" id="quiero" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-comp)">?</div>
+      <div class="titles"><h2>Quiero…</h2><p>Lo que querés hacer → el comando. Los más usados del día a día.</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card t-cont">
+        <h3>Contenedores e imágenes</h3>
+        <div class="want">
+          <div class="want-row"><div class="q">Descargar una imagen<small>pull, bajar, descargar</small></div><pre><code>docker pull node:18</code></pre></div>
+          <div class="want-row"><div class="q">Crear y arrancar en un paso<small>run, levantar, iniciar</small></div><pre><code>docker run -d --name &lt;nombre&gt; -p 3000:3000 &lt;imagen&gt;</code></pre></div>
+          <div class="want-row"><div class="q">Ver qué está corriendo<small>listar, ps</small></div><pre><code>docker ps</code></pre></div>
+          <div class="want-row"><div class="q">Ver todos (también detenidos)<small>listar, ps all</small></div><pre><code>docker ps -a</code></pre></div>
+          <div class="want-row"><div class="q">Arrancar / detener uno<small>start, stop, parar</small></div><pre><code>docker start &lt;nombre&gt;
+docker stop &lt;nombre&gt;</code></pre></div>
+          <div class="want-row"><div class="q">Borrar un contenedor<small>rm, eliminar</small></div><pre><code>docker rm -f &lt;nombre&gt;</code></pre></div>
+          <div class="want-row"><div class="q">Ver las imágenes que tengo<small>listar imágenes</small></div><pre><code>docker images</code></pre></div>
+          <div class="want-row"><div class="q">Borrar una imagen<small>rmi, eliminar imagen</small></div><pre><code>docker image rm &lt;imagen&gt;:&lt;tag&gt;</code></pre></div>
+          <div class="want-row"><div class="q">Construir mi imagen<small>build, Dockerfile</small></div><pre><code>docker build -t miapp:1 .</code></pre></div>
+        </div>
+      </div>
+
+      <div class="card t-comp">
+        <h3>Depurar y compose</h3>
+        <div class="want">
+          <div class="want-row"><div class="q">Ver los logs en vivo<small>logs, follow, watch, consola</small></div><pre><code>docker logs -f &lt;nombre&gt;</code></pre></div>
+          <div class="want-row"><div class="q">Entrar al contenedor<small>exec, terminal, shell, navegar</small></div><pre><code>docker exec -it &lt;nombre&gt; sh</code></pre></div>
+          <div class="want-row"><div class="q">Ver IP, volúmenes, variables<small>inspect, detalles</small></div><pre><code>docker inspect &lt;nombre&gt;</code></pre></div>
+          <div class="want-row"><div class="q">Levantar todo el proyecto<small>compose up, levantar set</small></div><pre><code>docker compose up -d</code></pre></div>
+          <div class="want-row"><div class="q">Levantar reconstruyendo<small>rebuild, cambios de código</small></div><pre><code>docker compose up --build</code></pre></div>
+          <div class="want-row"><div class="q">Levantar el compose de desarrollo<small>compose custom, -f, dev</small></div><pre><code>docker compose -f docker-compose-dev.yml up</code></pre></div>
+          <div class="want-row"><div class="q">Bajar todo<small>compose down, apagar</small></div><pre><code>docker compose down</code></pre></div>
+          <div class="want-row"><div class="q">Bajar todo y borrar datos<small>down volúmenes, reset db</small></div><pre><code>docker compose down -v</code></pre></div>
+          <div class="want-row"><div class="q">Liberar espacio en disco<small>prune, limpiar, borrar todo</small></div><pre><code>docker system prune</code></pre></div>
+        </div>
+      </div>
+
+      <div class="card t-net">
+        <h3>Redes y volúmenes</h3>
+        <div class="want">
+          <div class="want-row"><div class="q">Crear una red<small>network create</small></div><pre><code>docker network create mired</code></pre></div>
+          <div class="want-row"><div class="q">Listar redes<small>network ls list</small></div><pre><code>docker network ls</code></pre></div>
+          <div class="want-row"><div class="q">Crear contenedor en una red<small>--network, conectar</small></div><pre><code>docker create --name monguito --network mired mongo</code></pre></div>
+          <div class="want-row"><div class="q">Listar volúmenes<small>volume ls, datos</small></div><pre><code>docker volume ls</code></pre></div>
+          <div class="want-row"><div class="q">Persistir datos de Mongo<small>volumen, -v, persistencia</small></div><pre><code>docker run -d -v mongo-data:/data/db mongo</code></pre></div>
+        </div>
+      </div>
+
+      <div class="card t-file">
+        <h3>Conexión app → base de datos</h3>
+        <div class="want">
+          <div class="want-row"><div class="q">Connection string de Mongo<small>mongoose, conectar, host, authSource</small></div><pre><code data-lang="plain">mongodb://&lt;user&gt;:&lt;password&gt;@monguito:27017/miapp?authSource=admin</code></pre></div>
+          <div class="want-row"><div class="q">Abrir la consola de Mongo<small>mongosh, shell db</small></div><pre><code>docker exec -it monguito mongosh -u &lt;user&gt; -p &lt;password&gt;</code></pre></div>
+        </div>
+        <div class="callout info"><span class="ico">i</span><p>El host es el <b>nombre del contenedor/servicio</b>, nunca <code>localhost</code>. Ver <a href="01-conceptos.html#redes">diagrama de redes</a>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DESCARGAS ================= -->
+  <section class="block" id="descargas">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--ok)">↓</div>
+      <div class="titles"><h2>Descargar como imagen</h2><p>Cada hoja completa en PNG, para tenerla offline o imprimirla.</p></div>
+    </div>
+    <div class="card t-ok wide">
+      <h3>PNG por hoja</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Hoja</th><th>Tema oscuro</th><th>Tema claro</th></tr></thead>
+          <tbody>
+            <tr><td>Inicio</td><td><a href="img/index-dark.png" download>index-dark.png</a></td><td><a href="img/index-light.png" download>index-light.png</a></td></tr>
+            <tr><td>01 · Conceptos</td><td><a href="img/01-conceptos-dark.png" download>01-conceptos-dark.png</a></td><td><a href="img/01-conceptos-light.png" download>01-conceptos-light.png</a></td></tr>
+            <tr><td>02 · Comandos CLI</td><td><a href="img/02-comandos-dark.png" download>02-comandos-dark.png</a></td><td><a href="img/02-comandos-light.png" download>02-comandos-light.png</a></td></tr>
+            <tr><td>03 · Dockerfile</td><td><a href="img/03-dockerfile-dark.png" download>03-dockerfile-dark.png</a></td><td><a href="img/03-dockerfile-light.png" download>03-dockerfile-light.png</a></td></tr>
+            <tr><td>04 · Docker Compose</td><td><a href="img/04-compose-dark.png" download>04-compose-dark.png</a></td><td><a href="img/04-compose-light.png" download>04-compose-light.png</a></td></tr>
+            <tr><td>05 · Problemas comunes</td><td><a href="img/05-problemas-dark.png" download>05-problemas-dark.png</a></td><td><a href="img/05-problemas-light.png" download>05-problemas-light.png</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <p class="empty">Nada por acá. Probá en <a href="02-comandos.html">Comandos CLI</a> o en <a href="05-problemas.html">Problemas comunes</a>.</p>
+
+  <footer class="foot">
+    <span>Fuentes: <code>Docker Cheatsheet.txt</code>, <code>dockerfile-compose.txt</code>, <code>pruebas-docker/</code></span>
+    <a href="01-conceptos.html">Empezar por Conceptos →</a>
+  </footer>
+</main>
+</body>
+</html>

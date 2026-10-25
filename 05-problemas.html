@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Errores comunes de Docker y Docker Compose con su causa y solución.">
+<meta name="theme-color" content="#1d63ed">
+<title>Docker · Problemas comunes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B3%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+<style>
+  .fix dt { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-top: 10px; }
+  .fix dd { margin: 3px 0 0; font-size: 14px; }
+  .fix dd pre { margin-top: 6px; }
+  .err { --code-bg: var(--bad-soft); }
+  .err pre { background: color-mix(in srgb, var(--bad) 12%, var(--surface)); color: var(--bad); border-color: color-mix(in srgb, var(--bad) 35%, transparent); }
+  .err pre .copy { display: none; }
+</style>
+</head>
+<body data-page="problemas">
+<header class="topbar"></header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow">Cheatsheet 05</span>
+    <h1>Problemas comunes</h1>
+    <p class="lead">Buscá por el texto del error o por el síntoma. Cada tarjeta: <b>qué ves</b> → <b>por qué pasa</b> → <b>cómo se arregla</b>.</p>
+    <div class="toolbar">
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Pegá el error: port is already allocated, ECONNREFUSED…" autocomplete="off" aria-label="Buscar problema">
+        <span class="hint"><kbd>/</kbd></span>
+      </label>
+    </div>
+    <nav class="toc">
+      <a href="#conexion">Conexión y puertos</a>
+      <a href="#contenedores">Contenedores</a>
+      <a href="#build">Build e imágenes</a>
+      <a href="#compose">Compose y datos</a>
+      <a href="#entorno">Entorno Windows</a>
+    </nav>
+  </div>
+
+  <!-- ================= CONEXION ================= -->
+  <section class="block" id="conexion" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-net)">1</div>
+      <div class="titles"><h2>Conexión y puertos</h2></div>
+    </div>
+    <div class="grid">
+      <div class="card t-bad">
+        <h3>El puerto ya está en uso</h3>
+        <div class="err"><pre><code data-lang="plain">Bind for 0.0.0.0:3000 failed: port is already allocated</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Otro contenedor o programa de tu PC ya usa ese puerto del host.</dd>
+          <dt>Solución</dt>
+          <dd>Ver quién lo usa y detenerlo, o cambiar el puerto del <b>host</b> (el de la izquierda):
+            <pre><code>docker ps                      # ¿otro contenedor con :3000?
+netstat -ano | findstr :3000   # Windows: qué proceso lo usa
+docker run -p 3001:3000 miapp:1</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-bad">
+        <h3>La app no conecta con la base de datos</h3>
+        <div class="err"><pre><code data-lang="plain">MongooseServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Dentro de un contenedor, <code>localhost</code> es <b>el propio contenedor</b>. Mongo está en otro.</dd>
+          <dt>Solución</dt>
+          <dd>Usá el <b>nombre del contenedor/servicio</b> como host y asegurate de que estén en la misma red:
+            <pre><code data-lang="plain">mongodb://mati:&lt;password&gt;@monguito:27017/miapp?authSource=admin</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-bad">
+        <h3>getaddrinfo ENOTFOUND monguito</h3>
+        <div class="err"><pre><code data-lang="plain">getaddrinfo ENOTFOUND monguito</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Los contenedores <b>no están en la misma red</b> (o el nombre está mal escrito). Pasa si los creaste a mano sin <code>--network</code>.</dd>
+          <dt>Solución</dt>
+          <dd><pre><code>docker network create mired
+docker network connect mired monguito
+docker network connect mired chanchito
+docker network inspect mired   # verificar</code></pre>Con compose no pasa: todos los servicios comparten red.</dd>
+        </dl>
+      </div>
+
+      <div class="card t-bad">
+        <h3>Mongo: falla la autenticación</h3>
+        <div class="err"><pre><code data-lang="plain">MongoServerError: Authentication failed.</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>1) Falta <code>?authSource=admin</code> (el usuario root vive en la base <code>admin</code>). 2) Cambiaste usuario/contraseña en el compose pero el volumen ya tenía datos: <code>MONGO_INITDB_*</code> solo se aplica la primera vez.</dd>
+          <dt>Solución</dt>
+          <dd><pre><code>docker compose down -v   # ⚠ borra los datos y recrea el usuario
+docker compose up</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>Entro a localhost:3000 y no responde</h3>
+        <dl class="fix">
+          <dt>Revisar</dt>
+          <dd><ul>
+            <li>¿Mapeaste el puerto? <code>docker ps</code> debe mostrar <code>0.0.0.0:3000-&gt;3000/tcp</code>. <code>EXPOSE</code> solo no alcanza.</li>
+            <li>¿La app escucha en el puerto de la derecha del <code>-p</code>?</li>
+            <li>¿La app escucha en <code>0.0.0.0</code> y no solo en <code>127.0.0.1</code>? (Express por defecto ya usa todas las interfaces).</li>
+            <li>¿El contenedor sigue vivo? <code>docker ps -a</code> + <code>docker logs</code>.</li>
+          </ul></dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTENEDORES ================= -->
+  <section class="block" id="contenedores" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-cont)">2</div>
+      <div class="titles"><h2>Contenedores</h2></div>
+    </div>
+    <div class="grid">
+      <div class="card t-bad">
+        <h3>El nombre ya está en uso</h3>
+        <div class="err"><pre><code data-lang="plain">Conflict. The container name "/monguito" is already in use by container "2d77ac53..."</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Ya existe un contenedor con ese nombre (aunque esté detenido: <code>docker ps -a</code>).</dd>
+          <dt>Solución</dt>
+          <dd><pre><code>docker start monguito    # reutilizarlo
+docker rm -f monguito    # o borrarlo y crearlo de nuevo</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-bad">
+        <h3>El contenedor se apaga apenas arranca</h3>
+        <div class="err"><pre><code data-lang="plain">STATUS: Exited (1) 3 seconds ago</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>El proceso principal (<code>CMD</code>) terminó o tiró error. Un contenedor vive mientras vive su proceso principal.</dd>
+          <dt>Solución</dt>
+          <dd><pre><code>docker ps -a              # ver el estado / exit code
+docker logs &lt;nombre&gt;      # leer el error real
+docker run --rm -it miapp:1 sh   # entrar y probar a mano</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-bad">
+        <h3>bash: not found</h3>
+        <div class="err"><pre><code data-lang="plain">OCI runtime exec failed: exec: "bash": executable file not found in $PATH</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>La imagen es mínima (ej. <code>alpine</code>) y no trae bash.</dd>
+          <dt>Solución</dt><dd><pre><code>docker exec -it &lt;nombre&gt; sh</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-bad">
+        <h3>No puedo borrar la imagen</h3>
+        <div class="err"><pre><code data-lang="plain">conflict: unable to remove repository reference "node:16" (must force) - container 1a2b3c is using its referenced image</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Algún contenedor (aunque esté detenido) se creó a partir de esa imagen.</dd>
+          <dt>Solución</dt>
+          <dd><pre><code>docker ps -a --filter ancestor=node:16
+docker rm &lt;id&gt;
+docker image rm node:16</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>docker run mongo -d no queda en segundo plano</h3>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Lo que va <b>después</b> del nombre de la imagen se pasa como argumento al proceso, no a Docker.</dd>
+          <dt>Solución</dt><dd><pre><code>docker run -d mongo     # flags SIEMPRE antes de la imagen</code></pre></dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BUILD ================= -->
+  <section class="block" id="build" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-file)">3</div>
+      <div class="titles"><h2>Build e imágenes</h2></div>
+    </div>
+    <div class="grid">
+      <div class="card t-bad">
+        <h3>COPY no encuentra el archivo</h3>
+        <div class="err"><pre><code data-lang="plain">COPY failed: file not found in build context or excluded by .dockerignore</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>La ruta de origen está <b>fuera del build context</b> (ej. <code>COPY E/Development/...</code> o <code>COPY ../otra</code>), o está excluida en <code>.dockerignore</code>.</dd>
+          <dt>Solución</dt>
+          <dd>Rutas siempre relativas al contexto; si necesitás carpetas hermanas, subí el contexto:
+            <pre><code>docker build -t api:1 -f src/Api/Dockerfile .   # contexto = raíz</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-bad">
+        <h3>"docker build" requires exactly 1 argument</h3>
+        <div class="err"><pre><code data-lang="plain">ERROR: "docker buildx build" requires exactly 1 argument.</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Falta la ruta del contexto o el espacio antes de ella (<code>-t miapp.</code>).</dd>
+          <dt>Solución</dt><dd><pre><code>docker build -t miapp:1 .</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>Cambié el código y el contenedor sigue igual</h3>
+        <dl class="fix">
+          <dt>Causa</dt><dd>En producción el código está <b>copiado dentro de la imagen</b>. <code>up</code> reutiliza la imagen ya construida.</dd>
+          <dt>Solución</dt><dd><pre><code>docker compose up --build</code></pre>Para no reconstruir en cada cambio usá el <a href="04-compose.html#dev">compose de desarrollo</a>.</dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>El build tarda una eternidad</h3>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Se envía un contexto enorme (<code>node_modules</code>, <code>.git</code>, <code>bin/obj</code>) o el orden de capas rompe la caché.</dd>
+          <dt>Solución</dt><dd>Agregá un <a href="03-dockerfile.html#dockerignore">.dockerignore</a> y copiá primero <code>package.json</code> / <code>.csproj</code> antes que el resto (<a href="03-dockerfile.html#cache">ver caché</a>).</dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>Funcionaba ayer y hoy el build falla</h3>
+        <dl class="fix">
+          <dt>Causa</dt><dd><code>FROM node:latest</code> cambió de versión mayor sin avisar.</dd>
+          <dt>Solución</dt><dd>Fijá versiones: <code>FROM node:18</code>, <code>image: mongo:7</code>.</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMPOSE ================= -->
+  <section class="block" id="compose" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-comp)">4</div>
+      <div class="titles"><h2>Compose y datos</h2></div>
+    </div>
+    <div class="grid">
+      <div class="card t-bad">
+        <h3>Desaparecieron los datos de la base</h3>
+        <dl class="fix">
+          <dt>Causa</dt><dd>1) No había volumen, 2) la ruta de destino era incorrecta (no es <code>/data/db</code>), o 3) usaste <code>docker compose down -v</code>.</dd>
+          <dt>Solución</dt>
+          <dd><pre><code data-lang="yaml">volumes:
+  - mongo-data:/data/db   # ruta exacta del motor
+# y declararlo al final:
+volumes:
+  mongo-data:</code></pre>Usá <code>down</code> sin <code>-v</code> para conservar datos.</dd>
+        </dl>
+      </div>
+
+      <div class="card t-bad">
+        <h3>Error de YAML</h3>
+        <div class="err"><pre><code data-lang="plain">yaml: line 8: mapping values are not allowed in this context</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Indentación inconsistente, <b>tabs</b> en lugar de espacios o falta un espacio después de <code>:</code> / <code>-</code>.</dd>
+          <dt>Solución</dt><dd><pre><code>docker compose config   # valida y señala la línea</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>La app arranca antes que la base y falla</h3>
+        <dl class="fix">
+          <dt>Causa</dt><dd><code>depends_on</code> (y <code>links</code>) solo esperan a que el contenedor <b>arranque</b>, no a que la DB acepte conexiones.</dd>
+          <dt>Solución</dt><dd>Healthcheck + <code>condition: service_healthy</code> (<a href="04-compose.html#multi">ejemplo</a>), o reintentos en la app; y <code>restart: unless-stopped</code>.</dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>version is obsolete</h3>
+        <div class="err"><pre><code data-lang="plain">WARN: the attribute `version` is obsolete, it will be ignored</code></pre></div>
+        <dl class="fix">
+          <dt>Solución</dt><dd>Borrá la línea <code>version: "3.9"</code> del YAML. No cambia nada.</dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>node_modules raros con el bind mount</h3>
+        <dl class="fix">
+          <dt>Causa</dt><dd><code>.:/home/app</code> pisa la carpeta entera, incluido <code>node_modules</code> del contenedor con el de tu PC (Windows).</dd>
+          <dt>Solución</dt><dd>Volumen anónimo para proteger <code>node_modules</code> e instalar dentro:
+            <pre><code data-lang="yaml">volumes:
+  - .:/home/app
+  - /home/app/node_modules</code></pre></dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ENTORNO ================= -->
+  <section class="block" id="entorno" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-img)">5</div>
+      <div class="titles"><h2>Entorno (Windows / Docker Desktop)</h2></div>
+    </div>
+    <div class="grid">
+      <div class="card t-bad">
+        <h3>No se puede conectar al daemon</h3>
+        <div class="err"><pre><code data-lang="plain">error during connect: ... open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.</code></pre></div>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Docker Desktop no está abierto (el motor no corre).</dd>
+          <dt>Solución</dt><dd>Abrí Docker Desktop y esperá a que diga <i>Engine running</i>. Verificá con <code>docker version</code>.</dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>nodemon no detecta los cambios</h3>
+        <dl class="fix">
+          <dt>Causa</dt><dd>En Windows los eventos de archivos no atraviesan el bind mount.</dd>
+          <dt>Solución</dt><dd><pre><code data-lang="dockerfile">CMD ["nodemon", "-L", "app.js"]</code></pre><code>-L</code> = legacy watch (polling). Alternativa: tener el proyecto dentro de WSL.</dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>El disco se llena</h3>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Imágenes viejas, contenedores detenidos, caché de builds y volúmenes huérfanos.</dd>
+          <dt>Solución</dt><dd><pre><code>docker system df
+docker system prune         # seguro: no toca volúmenes
+docker builder prune</code></pre></dd>
+        </dl>
+      </div>
+
+      <div class="card t-warn">
+        <h3>Rutas con -v en Windows</h3>
+        <dl class="fix">
+          <dt>Causa</dt><dd>Cada shell expande la carpeta actual distinto.</dd>
+          <dt>Solución</dt><dd><pre><code># PowerShell
+docker run -v ${PWD}:/home/app miapp:dev
+# CMD
+docker run -v %cd%:/home/app miapp:dev
+# Git Bash
+docker run -v "$(pwd)":/home/app miapp:dev</code></pre></dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <p class="empty">No encontré ese problema. Probá con otra palabra del error.</p>
+
+  <footer class="foot">
+    <a href="04-compose.html">← Docker Compose</a>
+    <a href="index.html">Volver al inicio</a>
+  </footer>
+</main>
+</body>
+</html>

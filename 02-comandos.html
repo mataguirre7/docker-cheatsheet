@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Comandos de la CLI de Docker con buscador: imágenes, contenedores, run, logs, exec, redes, volúmenes y limpieza.">
+<meta name="theme-color" content="#1d63ed">
+<title>Docker · Comandos CLI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B3%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="comandos">
+<header class="topbar"></header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow">Cheatsheet 02</span>
+    <h1>Comandos de la CLI</h1>
+    <p class="lead">Todo lo que se escribe en la terminal, agrupado por tema. Los valores en <span style="color:#ff8fc8;font-family:var(--mono)">&lt;rosa&gt;</span> se reemplazan; las <span style="color:#d9a520;font-family:var(--mono)">-flags</span> en amarillo. Pasá el mouse por un bloque para copiarlo.</p>
+    <div class="toolbar">
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Buscar: logs, puerto, red, borrar, volumen…" autocomplete="off" aria-label="Buscar comando">
+        <span class="hint"><kbd>/</kbd></span>
+      </label>
+    </div>
+    <nav class="toc">
+      <a href="#imagenes">Imágenes</a>
+      <a href="#contenedores">Contenedores</a>
+      <a href="#run">docker run</a>
+      <a href="#flags">Flags</a>
+      <a href="#logs">Logs e inspección</a>
+      <a href="#exec">Entrar al contenedor</a>
+      <a href="#redes">Redes</a>
+      <a href="#volumenes">Volúmenes</a>
+      <a href="#limpieza">Limpieza</a>
+      <a href="#manual">Ejemplo completo</a>
+    </nav>
+  </div>
+
+  <!-- ================= IMAGENES ================= -->
+  <section class="block" id="imagenes" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-img)">1</div>
+      <div class="titles"><h2>Imágenes</h2><p>Descargar, listar, construir y borrar.</p></div>
+    </div>
+    <div class="grid">
+      <div class="card t-img">
+        <h3>Descargar (pull)</h3>
+        <div class="cmd">
+          <pre><code>docker pull &lt;imagen&gt;:&lt;version&gt;</code></pre>
+          <div class="what">Baja una imagen desde Docker Hub. Sin versión ⇒ <code>:latest</code>.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker pull node:18
+docker pull node:latest
+docker pull mysql:latest
+docker pull mongo</code></pre>
+          <div class="what">Ejemplos de tus notas.</div>
+        </div>
+      </div>
+
+      <div class="card t-img">
+        <h3>Listar imágenes</h3>
+        <div class="cmd">
+          <pre><code>docker images</code></pre>
+          <div class="what">Lista las imágenes descargadas/construidas (igual que <code>docker image ls</code>).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker image inspect &lt;imagen&gt;</code></pre>
+          <div class="what">Detalle completo en JSON: capas, variables, comando por defecto, puertos expuestos.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker history &lt;imagen&gt;</code></pre>
+          <div class="what">Muestra las capas y qué instrucción del Dockerfile generó cada una.</div>
+        </div>
+      </div>
+
+      <div class="card t-img">
+        <h3>Borrar imágenes</h3>
+        <div class="cmd">
+          <pre><code>docker image rm &lt;imagen&gt;:&lt;version&gt;</code></pre>
+          <div class="what">Borra una imagen. Atajo equivalente: <code>docker rmi</code>.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker image rm node:16
+docker image rm mysql:latest</code></pre>
+          <div class="what">Ejemplos. Falla si hay un contenedor (aunque esté detenido) usándola.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker image prune</code></pre>
+          <div class="what">Borra imágenes “colgadas” (<code>&lt;none&gt;</code>) que quedan tras rebuilds. Con <code>-a</code> borra todas las que no usa ningún contenedor.</div>
+        </div>
+      </div>
+
+      <div class="card t-file">
+        <h3>Construir una imagen (build)</h3>
+        <div class="cmd">
+          <pre><code>docker build -t &lt;nombre&gt;:&lt;tag&gt; &lt;ruta-contexto&gt;</code></pre>
+          <div class="what">Construye usando el <code>Dockerfile</code> de la carpeta. <b>Ojo al espacio</b> antes de la ruta.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker build -t miapp:1 .</code></pre>
+          <div class="what">El <code>.</code> es el <b>build context</b>: la carpeta actual.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker build -t miapp:dev -f Dockerfile.dev .</code></pre>
+          <div class="what">Usar otro Dockerfile con <code>-f</code>.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker build --no-cache -t miapp:1 .</code></pre>
+          <div class="what">Reconstruye todo sin usar la caché de capas.</div>
+        </div>
+      </div>
+
+      <div class="card t-img">
+        <h3>Etiquetar y subir</h3>
+        <div class="cmd">
+          <pre><code>docker tag miapp:1 &lt;usuario&gt;/miapp:1</code></pre>
+          <div class="what">Le da otro nombre a la imagen (para subirla a tu cuenta).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker login
+docker push &lt;usuario&gt;/miapp:1</code></pre>
+          <div class="what">Sube la imagen a Docker Hub.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTENEDORES ================= -->
+  <section class="block" id="contenedores" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-cont)">2</div>
+      <div class="titles"><h2>Contenedores</h2><p>Crear, arrancar, detener, listar, borrar. Se referencian por <b>ID</b> (alcanzan los primeros caracteres) o <b>nombre</b>.</p></div>
+    </div>
+    <div class="grid">
+      <div class="card t-cont">
+        <h3>Crear (sin arrancar)</h3>
+        <div class="cmd">
+          <pre><code>docker create &lt;imagen&gt;</code></pre>
+          <div class="what">Crea el contenedor y devuelve su ID. Queda en estado <b>created</b>. Igual a <code>docker container create</code>.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker create --name &lt;nombre&gt; &lt;imagen&gt;</code></pre>
+          <div class="what">Con nombre propio (si no, Docker inventa uno tipo <code>jolly_turing</code>).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker create --name monguito \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=mati \
+  -e MONGO_INITDB_ROOT_PASSWORD=&lt;password&gt; \
+  mongo</code></pre>
+          <div class="what">Con puertos (<code>-p HOST:CONT</code>) y variables de entorno (<code>-e</code>). <b>Las flags van antes de la imagen.</b></div>
+        </div>
+      </div>
+
+      <div class="card t-cont">
+        <h3>Arrancar / detener</h3>
+        <div class="cmd">
+          <pre><code>docker start &lt;id|nombre&gt;</code></pre>
+          <div class="what">Inicia un contenedor creado o detenido.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker stop &lt;id|nombre&gt;</code></pre>
+          <div class="what"><b>Detiene</b> el contenedor (no lo borra).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker restart &lt;id|nombre&gt;</code></pre>
+          <div class="what">Stop + start.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker pause &lt;id|nombre&gt;
+docker unpause &lt;id|nombre&gt;</code></pre>
+          <div class="what">Pausa real: congela los procesos sin detenerlos.</div>
+        </div>
+      </div>
+
+      <div class="card t-cont">
+        <h3>Listar contenedores</h3>
+        <div class="cmd">
+          <pre><code>docker ps</code></pre>
+          <div class="what">Solo los que están <b>corriendo</b>.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker ps -a</code></pre>
+          <div class="what"><b>Todos</b>: activos e inactivos (created, exited…).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker ps -q</code></pre>
+          <div class="what">Solo los IDs (útil para combinar con otros comandos).</div>
+        </div>
+      </div>
+
+      <div class="card t-bad">
+        <h3>Borrar contenedores</h3>
+        <div class="cmd">
+          <pre><code>docker rm &lt;id|nombre&gt;</code></pre>
+          <div class="what">Borra un contenedor <b>detenido</b>. Ej: <code>docker rm 2d77ac5398a8</code></div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker rm -f &lt;id|nombre&gt;</code></pre>
+          <div class="what">Lo detiene y lo borra en un paso.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker container prune</code></pre>
+          <div class="what">Borra todos los contenedores detenidos.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RUN ================= -->
+  <section class="block" id="run" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-comp)">3</div>
+      <div class="titles"><h2>docker run — todo en uno</h2><p>1) si no está la imagen, la descarga · 2) crea el contenedor · 3) lo inicia.</p></div>
+    </div>
+    <div class="grid">
+      <div class="card t-comp">
+        <h3>Formas de usar run</h3>
+        <div class="cmd">
+          <pre><code>docker run &lt;imagen&gt;</code></pre>
+          <div class="what">Queda “pegado” a la terminal. <kbd>Ctrl</kbd>+<kbd>C</kbd> corta la ejecución.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker run -d &lt;imagen&gt;</code></pre>
+          <div class="what"><b>Detached</b>: corre en segundo plano y te devuelve la terminal.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker run --name &lt;nombre&gt; -p &lt;host&gt;:&lt;cont&gt; -d &lt;imagen&gt;</code></pre>
+          <div class="what">La forma más habitual: con nombre, puerto y en segundo plano.</div>
+        </div>
+        <div class="callout bad"><span class="ico">✕</span><p><code>docker run mongo -d</code> <b>no funciona como esperás</b>: todo lo que va después de la imagen se pasa como argumento al proceso del contenedor. Escribí <code>docker run -d mongo</code>.</p></div>
+      </div>
+
+      <div class="card t-comp">
+        <h3>Recetas con run</h3>
+        <div class="cmd">
+          <pre><code>docker run -d --name monguito -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=mati \
+  -e MONGO_INITDB_ROOT_PASSWORD=&lt;password&gt; \
+  -v mongo-data:/data/db \
+  mongo</code></pre>
+          <div class="what">Mongo listo para usar, con datos persistentes.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker run --rm -it node:18 bash</code></pre>
+          <div class="what">Shell temporal dentro de una imagen; se borra al salir (<code>--rm</code>).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker run -d --name chanchito -p 3000:3000 --network mired miapp:1</code></pre>
+          <div class="what">Tu app conectada a una red existente.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker run -d --env-file .env -p 3000:3000 miapp:1</code></pre>
+          <div class="what">Variables de entorno desde un archivo.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FLAGS ================= -->
+  <section class="block" id="flags" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-file)">4</div>
+      <div class="titles"><h2>Flags más usadas</h2><p>Sirven para <code>create</code> y <code>run</code>. Siempre van <b>antes</b> del nombre de la imagen.</p></div>
+    </div>
+    <div class="card t-file wide">
+      <h3>Tabla de flags</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Flag</th><th>Para qué</th><th>Ejemplo</th></tr></thead>
+          <tbody>
+            <tr><td><code>--name</code></td><td>Nombre del contenedor (también su hostname en la red)</td><td><code>--name monguito</code></td></tr>
+            <tr><td><code>-p</code></td><td>Publica puerto <b>HOST:CONTENEDOR</b></td><td><code>-p 3000:3000</code> · <code>-p 8080:3000</code></td></tr>
+            <tr><td><code>-e</code></td><td>Variable de entorno (repetible)</td><td><code>-e NODE_ENV=production</code></td></tr>
+            <tr><td><code>--env-file</code></td><td>Variables desde archivo</td><td><code>--env-file .env</code></td></tr>
+            <tr><td><code>-d</code></td><td>Segundo plano (detached)</td><td><code>docker run -d mongo</code></td></tr>
+            <tr><td><code>-it</code></td><td>Interactivo + terminal (para shells)</td><td><code>docker run -it node:18 bash</code></td></tr>
+            <tr><td><code>--rm</code></td><td>Borra el contenedor al terminar</td><td><code>docker run --rm alpine ls</code></td></tr>
+            <tr><td><code>--network</code></td><td>Conecta a una red</td><td><code>--network mired</code></td></tr>
+            <tr><td><code>-v</code></td><td>Volumen nombrado o bind mount</td><td><code>-v mongo-data:/data/db</code> · <code>-v ${PWD}:/home/app</code></td></tr>
+            <tr><td><code>-w</code></td><td>Directorio de trabajo dentro del contenedor</td><td><code>-w /home/app</code></td></tr>
+            <tr><td><code>--restart</code></td><td>Política de reinicio</td><td><code>--restart unless-stopped</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LOGS ================= -->
+  <section class="block" id="logs" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-cont)">5</div>
+      <div class="titles"><h2>Logs e inspección</h2><p>Ver qué está pasando adentro.</p></div>
+    </div>
+    <div class="grid">
+      <div class="card t-cont">
+        <h3>Logs</h3>
+        <div class="cmd">
+          <pre><code>docker logs &lt;id|nombre&gt;</code></pre>
+          <div class="what">Lo que la app imprimió por consola (<code>console.log</code>, errores…).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker logs -f &lt;id|nombre&gt;</code></pre>
+          <div class="what">Modo <b>watch</b>: se queda escuchando nuevos logs (= <code>--follow</code>).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker logs --tail 100 -f &lt;nombre&gt;</code></pre>
+          <div class="what">Solo las últimas 100 líneas y sigue escuchando.</div>
+        </div>
+      </div>
+      <div class="card t-cont">
+        <h3>Inspeccionar</h3>
+        <div class="cmd">
+          <pre><code>docker inspect &lt;id|nombre&gt;</code></pre>
+          <div class="what">Todo en JSON: IP, red, volúmenes montados, variables, estado.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker port &lt;nombre&gt;</code></pre>
+          <div class="what">Qué puertos tiene publicados.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker stats</code></pre>
+          <div class="what">Uso de CPU / RAM en vivo de cada contenedor.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker top &lt;nombre&gt;</code></pre>
+          <div class="what">Procesos que corren dentro.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EXEC ================= -->
+  <section class="block" id="exec" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-cont)">6</div>
+      <div class="titles"><h2>Entrar al contenedor y copiar archivos</h2><p>Para curiosear, depurar o ejecutar algo puntual.</p></div>
+    </div>
+    <div class="grid">
+      <div class="card t-cont">
+        <h3>Abrir una terminal adentro</h3>
+        <div class="cmd">
+          <pre><code>docker exec -it &lt;nombre&gt; sh</code></pre>
+          <div class="what">Shell dentro del contenedor (debe estar corriendo). Salís con <code>exit</code>.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker exec -it &lt;nombre&gt; bash</code></pre>
+          <div class="what">Si la imagen tiene bash (las <code>alpine</code> no, usá <code>sh</code>).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker exec -it monguito mongosh -u mati -p &lt;password&gt;</code></pre>
+          <div class="what">Consola de Mongo directo en el contenedor.</div>
+        </div>
+      </div>
+      <div class="card t-cont">
+        <h3>Ejecutar un comando suelto</h3>
+        <div class="cmd">
+          <pre><code>docker exec &lt;nombre&gt; ls /home/app</code></pre>
+          <div class="what">Corre el comando y vuelve.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker cp &lt;nombre&gt;:/ruta/archivo.txt ./archivo.txt
+docker cp ./config.json &lt;nombre&gt;:/home/app/config.json</code></pre>
+          <div class="what">Copiar archivos contenedor ⇄ PC.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= REDES ================= -->
+  <section class="block" id="redes" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-net)">7</div>
+      <div class="titles"><h2>Redes</h2><p>Para que dos contenedores se comuniquen deben estar en la <b>misma red</b>.</p></div>
+    </div>
+    <div class="grid">
+      <div class="card t-net">
+        <h3>Gestionar redes</h3>
+        <div class="cmd">
+          <pre><code>docker network ls</code></pre>
+          <div class="what">Listar redes (también vale <code>docker network list</code>).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker network create &lt;nombre&gt;</code></pre>
+          <div class="what">Crear una red. Ej: <code>docker network create mired</code></div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker network rm &lt;nombre&gt;</code></pre>
+          <div class="what">Eliminar una red (sin contenedores conectados).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker network inspect &lt;nombre&gt;</code></pre>
+          <div class="what">Ver qué contenedores hay conectados y sus IPs.</div>
+        </div>
+      </div>
+      <div class="card t-net">
+        <h3>Conectar contenedores</h3>
+        <div class="cmd">
+          <pre><code>docker create --name monguito \
+  -p 27017:27017 --network mired \
+  -e MONGO_INITDB_ROOT_USERNAME=mati \
+  -e MONGO_INITDB_ROOT_PASSWORD=&lt;password&gt; \
+  mongo</code></pre>
+          <div class="what">Crear el contenedor ya dentro de la red.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker network connect mired &lt;nombre&gt;
+docker network disconnect mired &lt;nombre&gt;</code></pre>
+          <div class="what">Conectar/desconectar un contenedor que ya existe.</div>
+        </div>
+        <div class="callout info"><span class="ico">i</span><p>Dentro de la red, la app se conecta usando el <b>nombre del contenedor</b> como host: <code>mongodb://mati:&lt;pass&gt;@monguito:27017/miapp?authSource=admin</code></p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= VOLUMENES ================= -->
+  <section class="block" id="volumenes" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-vol)">8</div>
+      <div class="titles"><h2>Volúmenes</h2><p>Datos que sobreviven aunque borres el contenedor.</p></div>
+    </div>
+    <div class="grid">
+      <div class="card t-vol">
+        <h3>Gestionar volúmenes</h3>
+        <div class="cmd">
+          <pre><code>docker volume ls</code></pre>
+          <div class="what">Listar volúmenes. Los de compose se llaman <code>&lt;carpeta&gt;_&lt;volumen&gt;</code> (ej: <code>pruebas-docker_mongo-data</code>).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker volume create &lt;nombre&gt;</code></pre>
+          <div class="what">Crear (con <code>-v</code> o compose se crea solo si no existe).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker volume inspect &lt;nombre&gt;</code></pre>
+          <div class="what">Dónde está físicamente y quién lo creó.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker volume rm &lt;nombre&gt;</code></pre>
+          <div class="what"><b>Borra los datos</b> para siempre. No se puede si un contenedor lo usa.</div>
+        </div>
+      </div>
+      <div class="card t-vol">
+        <h3>Montar volúmenes</h3>
+        <div class="cmd">
+          <pre><code>docker run -d -v mongo-data:/data/db mongo</code></pre>
+          <div class="what"><b>Volumen nombrado</b>: <code>nombre:ruta-en-contenedor</code>.</div>
+        </div>
+        <div class="cmd">
+          <pre><code># PowerShell
+docker run -d -v ${PWD}:/home/app -p 3000:3000 miapp:dev
+# Git Bash / Linux / macOS
+docker run -d -v "$(pwd)":/home/app -p 3000:3000 miapp:dev</code></pre>
+          <div class="what"><b>Bind mount</b>: tu carpeta actual dentro del contenedor.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LIMPIEZA ================= -->
+  <section class="block" id="limpieza" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--bad)">9</div>
+      <div class="titles"><h2>Limpieza y espacio en disco</h2><p>Docker acumula basura rápido. Leé qué borra cada uno antes de ejecutarlo.</p></div>
+    </div>
+    <div class="grid">
+      <div class="card t-bad">
+        <h3>Liberar espacio</h3>
+        <div class="cmd">
+          <pre><code>docker system df</code></pre>
+          <div class="what">Cuánto ocupan imágenes, contenedores, volúmenes y caché.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker system prune</code></pre>
+          <div class="what">Borra contenedores detenidos, redes sin uso, imágenes colgadas y caché de build. <b>No</b> toca volúmenes.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker system prune -a --volumes</code></pre>
+          <div class="what"><b>Nuclear</b>: además todas las imágenes sin uso y los volúmenes sin uso (¡datos de DB!).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker builder prune</code></pre>
+          <div class="what">Solo la caché de builds.</div>
+        </div>
+      </div>
+      <div class="card t-bad">
+        <h3>Borrado en lote</h3>
+        <div class="cmd">
+          <pre><code># PowerShell / Bash
+docker stop $(docker ps -q)</code></pre>
+          <div class="what">Detener todos los contenedores que están corriendo.</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker rm $(docker ps -aq)</code></pre>
+          <div class="what">Borrar todos los contenedores (detenidos).</div>
+        </div>
+        <div class="cmd">
+          <pre><code>docker volume prune</code></pre>
+          <div class="what">Borra volúmenes que no usa ningún contenedor.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MANUAL ================= -->
+  <section class="block" id="manual" data-search>
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-comp)">10</div>
+      <div class="titles"><h2>Ejemplo completo a mano (sin compose)</h2><p>Lo mismo que hace tu <code>docker-compose.yml</code>, paso a paso.</p></div>
+    </div>
+    <div class="card t-comp wide">
+      <h3>App Node (chanchito) + MongoDB (monguito)</h3>
+      <div class="cmd">
+        <pre class="big"><code># 1. Red compartida
+docker network create mired
+
+# 2. Base de datos dentro de la red
+docker create --name monguito -p 27017:27017 --network mired \
+  -e MONGO_INITDB_ROOT_USERNAME=mati \
+  -e MONGO_INITDB_ROOT_PASSWORD=&lt;password&gt; \
+  -v mongo-data:/data/db \
+  mongo
+
+# 3. Imagen de la app (desde la carpeta del proyecto)
+docker build -t miapp:1 .
+
+# 4. Contenedor de la app en la misma red
+docker create --name chanchito -p 3000:3000 --network mired miapp:1
+
+# 5. Arrancar ambos
+docker start monguito
+docker start chanchito
+
+# 6. Probar
+#    http://localhost:3000/crear   -> crea un documento
+#    http://localhost:3000         -> lista los documentos
+docker logs -f chanchito</code></pre>
+        <div class="what">Con compose todo esto se reduce a <code>docker compose up</code> → ver la <a href="04-compose.html">cheatsheet de Compose</a>.</div>
+      </div>
+    </div>
+  </section>
+
+  <p class="empty">No hay comandos que coincidan con la búsqueda.</p>
+
+  <footer class="foot">
+    <a href="01-conceptos.html">← Conceptos</a>
+    <a href="03-dockerfile.html">Siguiente: Dockerfile →</a>
+  </footer>
+</main>
+</body>
+</html>

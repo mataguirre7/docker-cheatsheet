@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Referencia de Dockerfile: instrucciones, capas y caché, imágenes Node de producción y desarrollo, multi-stage .NET.">
+<meta name="theme-color" content="#1d63ed">
+<title>Docker · Dockerfile</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B3%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="dockerfile">
+<header class="topbar"></header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker>
+    <marker id="ah-comp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-comp"/></marker>
+    <marker id="ah-file" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-file"/></marker>
+  </defs>
+</svg>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow">Cheatsheet 03</span>
+    <h1>Dockerfile</h1>
+    <p class="lead">La receta para construir <b>tu propia imagen</b>. Cada instrucción genera una capa; el orden importa para la caché.</p>
+    <nav class="toc">
+      <a href="#instrucciones">Instrucciones</a>
+      <a href="#node-prod">Node producción</a>
+      <a href="#node-dev">Node desarrollo</a>
+      <a href="#cache">Capas y caché</a>
+      <a href="#multistage">Multi-stage (.NET)</a>
+      <a href="#cmd-entry">CMD vs ENTRYPOINT</a>
+      <a href="#dockerignore">.dockerignore</a>
+      <a href="#build">Construir</a>
+    </nav>
+  </div>
+
+  <!-- ================= INSTRUCCIONES ================= -->
+  <section class="block" id="instrucciones">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-file)">1</div>
+      <div class="titles"><h2>Instrucciones</h2><p>Van en MAYÚSCULAS y se ejecutan de arriba hacia abajo.</p></div>
+    </div>
+    <div class="card t-file wide">
+      <h3>Referencia rápida</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Instrucción</th><th>Qué hace</th><th>Ejemplo</th></tr></thead>
+          <tbody>
+            <tr><td><code>FROM</code></td><td>Imagen base. Siempre la primera. <code>AS nombre</code> define una etapa.</td><td><code>FROM node:18</code></td></tr>
+            <tr><td><code>WORKDIR</code></td><td>Carpeta de trabajo dentro del contenedor. <b>La crea si no existe</b> (reemplaza a <code>RUN mkdir -p</code> + <code>cd</code>).</td><td><code>WORKDIR /home/app</code></td></tr>
+            <tr><td><code>COPY</code></td><td>Copia <b>[ORIGEN-PC] → [DESTINO-CONTENEDOR]</b>. El origen es relativo al build context.</td><td><code>COPY . /home/app</code></td></tr>
+            <tr><td><code>ADD</code></td><td>Como COPY pero además descomprime <code>.tar</code> y acepta URLs. Preferí COPY.</td><td><code>ADD app.tar.gz /opt/</code></td></tr>
+            <tr><td><code>RUN</code></td><td>Ejecuta un comando <b>al construir</b> la imagen (instalar cosas).</td><td><code>RUN npm i -g nodemon</code></td></tr>
+            <tr><td><code>ENV</code></td><td>Variable de entorno disponible en build y en ejecución.</td><td><code>ENV NODE_ENV=production</code></td></tr>
+            <tr><td><code>ARG</code></td><td>Variable solo durante el build (<code>--build-arg</code>).</td><td><code>ARG VERSION=1.0</code></td></tr>
+            <tr><td><code>EXPOSE</code></td><td>Documenta el puerto de la app. <b>No publica nada</b> (eso es <code>-p</code>).</td><td><code>EXPOSE 3000</code></td></tr>
+            <tr><td><code>CMD</code></td><td>Comando por defecto <b>al iniciar</b> el contenedor. Solo vale el último.</td><td><code>CMD ["node", "app.js"]</code></td></tr>
+            <tr><td><code>ENTRYPOINT</code></td><td>Ejecutable fijo del contenedor; CMD/args se le agregan.</td><td><code>ENTRYPOINT ["dotnet", "Api.dll"]</code></td></tr>
+            <tr><td><code>USER</code></td><td>Usuario con el que corre (evitar root en producción).</td><td><code>USER node</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout info"><span class="ico">i</span><p><b>RUN vs CMD:</b> <code>RUN</code> se ejecuta <u>una vez al construir</u> la imagen. <code>CMD</code> se ejecuta <u>cada vez que arranca</u> un contenedor.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= NODE PROD ================= -->
+  <section class="block" id="node-prod">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-img)">2</div>
+      <div class="titles"><h2>Node.js — imagen de producción</h2><p>El código queda <b>copiado dentro</b> de la imagen.</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card t-img">
+        <span class="tag">Tu versión</span>
+        <h3>Dockerfile (pruebas-docker)</h3>
+        <div class="code-label"><span class="file">Dockerfile</span><span>funciona ✓</span></div>
+        <pre class="big"><code data-lang="dockerfile"># imagen a utilizar
+FROM node:latest
+
+# directorio en el contenedor donde va el código
+RUN mkdir -p /home/app
+
+# [ORIGEN-PC] [DESTINO-CONTAINER]
+COPY . /home/app
+
+# puerto de la app (informativo)
+EXPOSE 3000
+
+# comando + argumentos
+CMD ["node", "/home/app/app.js"]</code></pre>
+        <div class="callout warn"><span class="ico">!</span><p>No instala dependencias: funciona porque copia tu <code>node_modules</code> local. Si tuvieras dependencias nativas (bcrypt, sharp…) compiladas en Windows, fallarían en Linux.</p></div>
+        <div class="callout bad"><span class="ico">✕</span><p>En <code>docs/Dockerfile-example.md</code> tenés <code>COPY E/Development/pruebas-docker /home/app</code>: <b>no funciona</b>. COPY no acepta rutas absolutas de tu PC, solo rutas dentro del build context → <code>COPY . /home/app</code>.</p></div>
+      </div>
+
+      <div class="card t-ok">
+        <span class="tag">Versión mejorada</span>
+        <h3>Dockerfile recomendado</h3>
+        <div class="code-label"><span class="file">Dockerfile</span><span>usa caché + reproducible</span></div>
+        <pre class="big"><code data-lang="dockerfile"># versión fija: latest puede cambiar y romper el build
+FROM node:18
+
+# crea la carpeta y se para en ella
+WORKDIR /home/app
+
+# 1º solo las dependencias (capa cacheable)
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# 2º el resto del código
+COPY . .
+
+EXPOSE 3000
+
+CMD ["node", "app.js"]</code></pre>
+        <ul>
+          <li><code>WORKDIR</code> reemplaza <code>RUN mkdir -p</code> y permite rutas relativas</li>
+          <li>Si solo cambiás código, <code>npm ci</code> no se vuelve a ejecutar (ver <a href="#cache">caché</a>)</li>
+          <li>Acompañalo con un <a href="#dockerignore">.dockerignore</a> que excluya <code>node_modules</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= NODE DEV ================= -->
+  <section class="block" id="node-dev">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-vol)">3</div>
+      <div class="titles"><h2>Node.js — imagen de desarrollo</h2><p>No copia el código: lo recibe por un <b>volumen (bind mount)</b> desde compose y <b>nodemon</b> recarga al guardar.</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card t-vol">
+        <h3>Dockerfile.dev</h3>
+        <div class="code-label"><span class="file">Dockerfile.dev</span></div>
+        <pre class="big"><code data-lang="dockerfile">FROM node:latest
+
+# nodemon global para recargar al guardar
+RUN npm i -g nodemon
+RUN mkdir -p /home/app
+
+WORKDIR /home/app
+
+EXPOSE 3000
+
+# -L = legacy watch (polling)
+CMD ["nodemon", "-L", "app.js"]</code></pre>
+      </div>
+      <div class="card t-vol">
+        <h3>Por qué así</h3>
+        <ul>
+          <li><b>Sin <code>COPY</code></b>: el código entra por <code>volumes: - .:/home/app</code> en <code>docker-compose-dev.yml</code></li>
+          <li>Editás en tu PC → el archivo cambia dentro del contenedor → nodemon reinicia</li>
+          <li><b>No hace falta rebuild</b> por cada cambio de código (solo si cambia el Dockerfile o dependencias globales)</li>
+          <li><code>-L</code> es necesario en <b>Windows/WSL</b>: los eventos de cambio de archivo no cruzan el bind mount, así que nodemon tiene que consultar (polling)</li>
+          <li><code>RUN mkdir -p</code> sobra: <code>WORKDIR</code> ya crea la carpeta</li>
+        </ul>
+        <div class="callout tip"><span class="ico">✓</span><p>Levantalo con <code>docker compose -f docker-compose-dev.yml up</code>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CACHE ================= -->
+  <section class="block" id="cache">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--ok)">4</div>
+      <div class="titles"><h2>Capas y caché</h2><p>Si una capa cambia, se reconstruyen <b>esa y todas las de abajo</b>. Lo que cambia poco va arriba.</p></div>
+    </div>
+    <div class="diagram">
+      <div class="svg-scroll">
+      <svg viewBox="0 0 1000 300" role="img" aria-label="Capas del Dockerfile: al cambiar app.js solo se reconstruyen las capas desde COPY . .">
+        <text x="20" y="26" class="d-title">Cambiaste solo <tspan class="d-code">app.js</tspan> y volvés a hacer <tspan class="d-code">docker build</tspan>:</text>
+
+        <rect x="20" y="44" width="470" height="36" rx="8" class="d-ok"/>
+        <text x="36" y="67" class="d-code">FROM node:18</text>
+        <text x="474" y="67" text-anchor="end" class="d-lbl">CACHED</text>
+
+        <rect x="20" y="86" width="470" height="36" rx="8" class="d-ok"/>
+        <text x="36" y="109" class="d-code">WORKDIR /home/app</text>
+        <text x="474" y="109" text-anchor="end" class="d-lbl">CACHED</text>
+
+        <rect x="20" y="128" width="470" height="36" rx="8" class="d-ok"/>
+        <text x="36" y="151" class="d-code">COPY package*.json ./</text>
+        <text x="474" y="151" text-anchor="end" class="d-lbl">CACHED</text>
+
+        <rect x="20" y="170" width="470" height="36" rx="8" class="d-ok"/>
+        <text x="36" y="193" class="d-code">RUN npm ci</text>
+        <text x="474" y="193" text-anchor="end" class="d-lbl">CACHED · ahorra minutos</text>
+
+        <rect x="20" y="212" width="470" height="36" rx="8" class="d-vol"/>
+        <text x="36" y="235" class="d-code" style="font-weight:700">COPY . .</text>
+        <text x="474" y="235" text-anchor="end" class="d-lbl">cambió → se rehace</text>
+
+        <rect x="20" y="254" width="470" height="36" rx="8" class="d-vol"/>
+        <text x="36" y="277" class="d-code">CMD ["node","app.js"]</text>
+        <text x="474" y="277" text-anchor="end" class="d-lbl">se rehace</text>
+
+        <!-- lado derecho: orden malo -->
+        <text x="540" y="26" class="d-title">Con el orden “todo junto”:</text>
+        <rect x="540" y="44" width="440" height="36" rx="8" class="d-ok"/>
+        <text x="556" y="67" class="d-code">FROM node:18</text>
+        <text x="964" y="67" text-anchor="end" class="d-lbl">CACHED</text>
+        <rect x="540" y="86" width="440" height="36" rx="8" class="d-ok"/>
+        <text x="556" y="109" class="d-code">WORKDIR /home/app</text>
+        <text x="964" y="109" text-anchor="end" class="d-lbl">CACHED</text>
+        <rect x="540" y="128" width="440" height="36" rx="8" class="d-vol"/>
+        <text x="556" y="151" class="d-code" style="font-weight:700">COPY . .</text>
+        <text x="964" y="151" text-anchor="end" class="d-lbl">cambió → se rehace</text>
+        <rect x="540" y="170" width="440" height="36" rx="8" class="d-bad"/>
+        <text x="556" y="193" class="d-code">RUN npm ci</text>
+        <text x="964" y="193" text-anchor="end" class="d-lbl">reinstala TODO otra vez ✕</text>
+        <rect x="540" y="212" width="440" height="36" rx="8" class="d-vol"/>
+        <text x="556" y="235" class="d-code">CMD ["node","app.js"]</text>
+        <text x="964" y="235" text-anchor="end" class="d-lbl">se rehace</text>
+        <text x="760" y="280" text-anchor="middle" class="d-sub">copiar package.json primero = builds mucho más rápidos</text>
+      </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MULTISTAGE ================= -->
+  <section class="block" id="multistage">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-comp)">5</div>
+      <div class="titles"><h2>Multi-stage build (ASP.NET Core / .NET 10)</h2><p>Una etapa con el SDK para <b>compilar</b>, otra solo con el runtime para <b>ejecutar</b>. La imagen final es mucho más liviana.</p></div>
+    </div>
+
+    <div class="diagram">
+      <div class="svg-scroll">
+      <svg viewBox="0 0 1000 330" role="img" aria-label="Etapa build con SDK publica en /app/publish; la etapa runtime copia ese resultado">
+        <!-- contexto -->
+        <path d="M14,92 h56 l12,14 h86 a8,8 0 0 1 8,8 v110 a8,8 0 0 1 -8,8 h-146 a8,8 0 0 1 -8,-8 v-124 a8,8 0 0 1 8,-8 z" class="d-file"/>
+        <text x="95" y="150" text-anchor="middle" class="d-title">aspnet-core/</text>
+        <text x="95" y="170" text-anchor="middle" class="d-sub">build context</text>
+        <text x="95" y="190" text-anchor="middle" class="d-lbl">.sln · Domain</text>
+        <text x="95" y="206" text-anchor="middle" class="d-lbl">Application · Host</text>
+
+        <!-- etapa build -->
+        <rect x="222" y="20" width="350" height="270" rx="16" class="d-img" style="fill-opacity:.6"/>
+        <text x="242" y="48" class="d-title">Etapa 1 · build</text>
+        <text x="552" y="48" text-anchor="end" class="d-lbl">dotnet/sdk:10.0</text>
+        <rect x="242" y="64" width="310" height="30" rx="7" class="d-plain"/><text x="256" y="84" class="d-code">WORKDIR /src</text>
+        <rect x="242" y="100" width="310" height="30" rx="7" class="d-plain"/><text x="256" y="120" class="d-code">COPY . .</text>
+        <rect x="242" y="136" width="310" height="30" rx="7" class="d-plain"/><text x="256" y="156" class="d-code">RUN dotnet restore</text>
+        <rect x="242" y="172" width="310" height="30" rx="7" class="d-plain"/><text x="256" y="192" class="d-code">RUN dotnet publish -o /app/publish</text>
+        <rect x="330" y="222" width="140" height="40" rx="10" class="d-comp"/><text x="400" y="247" text-anchor="middle" class="d-code" style="font-weight:700">/app/publish</text>
+        <path d="M400,202 L400,218" class="d-line s-comp" marker-end="url(#ah-comp)"/>
+        <text x="397" y="308" text-anchor="middle" class="d-sub">⟶ se descarta (no va en la imagen final)</text>
+
+        <path d="M176,160 L238,118" class="d-line s-file" marker-end="url(#ah-file)"/>
+
+        <!-- etapa runtime -->
+        <rect x="652" y="20" width="334" height="270" rx="16" class="d-cont"/>
+        <text x="672" y="48" class="d-title">Etapa 2 · runtime</text>
+        <text x="966" y="48" text-anchor="end" class="d-lbl">dotnet/aspnet:10.0</text>
+        <rect x="672" y="64" width="294" height="30" rx="7" class="d-plain"/><text x="686" y="84" class="d-code">WORKDIR /app</text>
+        <rect x="672" y="100" width="294" height="30" rx="7" class="d-plain" style="stroke:var(--c-comp)"/><text x="686" y="120" class="d-code">COPY --from=build /app/publish .</text>
+        <rect x="672" y="136" width="294" height="30" rx="7" class="d-plain"/><text x="686" y="156" class="d-code">EXPOSE 8080</text>
+        <rect x="672" y="172" width="294" height="30" rx="7" class="d-plain"/><text x="686" y="192" class="d-code">ENTRYPOINT dotnet Api.dll</text>
+        <text x="819" y="236" text-anchor="middle" class="d-title">= imagen final</text>
+        <text x="819" y="256" text-anchor="middle" class="d-sub">solo runtime + DLLs compiladas</text>
+
+        <path d="M470,242 C600,242 600,115 668,115" class="d-line s-comp" style="stroke-width:2.4" marker-end="url(#ah-comp)"/>
+        <text x="478" y="282" class="d-lbl f-comp">--from=build</text>
+      </svg>
+      </div>
+    </div>
+
+    <div class="grid cols-2" style="margin-top:16px">
+      <div class="card t-comp">
+        <h3>Dockerfile</h3>
+        <div class="code-label"><span class="file">src/&lt;Proyecto&gt;.HttpApi.Host/Dockerfile</span></div>
+        <pre class="big"><code data-lang="dockerfile"># ---------- Etapa 1: compilar ----------
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# toda la solución: Host depende de Domain, Application…
+COPY . .
+
+RUN dotnet restore "src/&lt;Proyecto&gt;.HttpApi.Host/&lt;Proyecto&gt;.HttpApi.Host.csproj"
+RUN dotnet publish "src/&lt;Proyecto&gt;.HttpApi.Host/&lt;Proyecto&gt;.HttpApi.Host.csproj" \
+    -c Release -o /app/publish
+
+# ---------- Etapa 2: ejecutar ----------
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "&lt;Proyecto&gt;.HttpApi.Host.dll"]</code></pre>
+      </div>
+      <div class="card t-comp">
+        <h3>Paso a paso (de tus notas)</h3>
+        <ol class="steps">
+          <li>Etapa <b>build</b> con la imagen del <b>SDK</b> de .NET 10.</li>
+          <li><code>WORKDIR /src</code>: nos paramos en una carpeta nueva del contenedor.</li>
+          <li><code>COPY . .</code> copia <b>todo el build context</b> (la carpeta <code>aspnet-core</code> completa, así se definió en compose) porque HttpApi.Host necesita los otros proyectos para compilar.</li>
+          <li><code>restore</code> + <code>publish</code>. El resultado va a <code>/app/publish</code> — <b>ruta absoluta</b>, no relativa a <code>/src</code>.</li>
+          <li>Etapa <b>runtime</b>: solo lo necesario para ejecutar.</li>
+          <li><code>WORKDIR /app</code>.</li>
+          <li><code>COPY --from=build</code> trae lo publicado desde la etapa anterior.</li>
+          <li><code>EXPOSE 8080</code> (informativo; en .NET 8+ el puerto por defecto es 8080).</li>
+          <li><code>ENTRYPOINT</code> ejecuta la DLL compilada.</li>
+        </ol>
+        <div class="callout warn"><span class="ico">!</span><p><b>El restore separado no aprovecha la caché</b> tal como está. Para que sirva, copiá primero solo los <code>.csproj</code>, hacé <code>restore</code> y recién después <code>COPY . .</code> (mismo truco que <code>package.json</code> en Node). <code>publish</code> igual hace restore si hace falta.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CMD vs ENTRYPOINT ================= -->
+  <section class="block" id="cmd-entry">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-cont)">6</div>
+      <div class="titles"><h2>CMD vs ENTRYPOINT · forma exec vs shell</h2><p>Cómo arranca el proceso principal.</p></div>
+    </div>
+    <div class="grid cols-3">
+      <div class="card t-cont">
+        <h3>CMD</h3>
+        <p>Comando por defecto. Se <b>reemplaza</b> si pasás algo después de la imagen.</p>
+        <pre><code data-lang="dockerfile">CMD ["node", "app.js"]</code></pre>
+        <pre style="margin-top:8px"><code>docker run miapp:1 node otro.js   # reemplaza el CMD</code></pre>
+      </div>
+      <div class="card t-cont">
+        <h3>ENTRYPOINT</h3>
+        <p>Ejecutable fijo. Lo que pases (o el CMD) se agrega como <b>argumentos</b>.</p>
+        <pre><code data-lang="dockerfile">ENTRYPOINT ["dotnet", "Api.dll"]</code></pre>
+        <pre style="margin-top:8px"><code>docker run api:1 --urls http://+:5000   # dotnet Api.dll --urls ...</code></pre>
+      </div>
+      <div class="card t-cont">
+        <h3>Exec form vs shell form</h3>
+        <p>Usá la forma <b>JSON (exec)</b>: el proceso recibe las señales y <code>docker stop</code> lo cierra limpio.</p>
+        <pre><code data-lang="dockerfile"># ✓ exec form
+CMD ["node", "app.js"]
+# ✕ shell form (corre dentro de /bin/sh -c)
+CMD node app.js</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DOCKERIGNORE ================= -->
+  <section class="block" id="dockerignore">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--warn)">7</div>
+      <div class="titles"><h2>.dockerignore</h2><p>Lo que <b>no</b> se manda al build context. Hace los builds más rápidos y evita copiar basura o secretos.</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card t-warn">
+        <h3>Node.js</h3>
+        <div class="code-label"><span class="file">.dockerignore</span><span>junto al Dockerfile</span></div>
+        <pre class="big"><code data-lang="plain">node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+docs
+Dockerfile*
+docker-compose*.yml</code></pre>
+      </div>
+      <div class="card t-warn">
+        <h3>.NET</h3>
+        <div class="code-label"><span class="file">.dockerignore</span><span>en la raíz del context</span></div>
+        <pre class="big"><code data-lang="plain">**/bin
+**/obj
+**/.vs
+**/node_modules
+.git
+*.user
+**/appsettings.Development.json</code></pre>
+        <div class="callout info"><span class="ico">i</span><p>Tu proyecto <code>pruebas-docker</code> no tiene <code>.dockerignore</code>: el <code>COPY .</code> está copiando <code>node_modules</code> y <code>.git</code> dentro de la imagen.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BUILD ================= -->
+  <section class="block" id="build">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-img)">8</div>
+      <div class="titles"><h2>Construir la imagen</h2><p>Desde la carpeta donde está el Dockerfile.</p></div>
+    </div>
+    <div class="card t-img wide">
+      <h3>Comandos de build</h3>
+      <div class="grid cols-2">
+        <div>
+          <div class="cmd"><pre><code>docker build -t miapp:1 .</code></pre><div class="what">Build normal con tag <code>miapp:1</code> y contexto <code>.</code></div></div>
+          <div class="cmd"><pre><code>docker build -t miapp:dev -f Dockerfile.dev .</code></pre><div class="what">Con otro Dockerfile.</div></div>
+          <div class="cmd"><pre><code>docker build --no-cache -t miapp:1 .</code></pre><div class="what">Ignorar la caché de capas.</div></div>
+        </div>
+        <div>
+          <div class="cmd"><pre><code>docker build --target build -t api:build .</code></pre><div class="what">Construir solo hasta una etapa (multi-stage).</div></div>
+          <div class="cmd"><pre><code>docker build --build-arg VERSION=2.0 -t miapp:2 .</code></pre><div class="what">Pasar valores a un <code>ARG</code>.</div></div>
+          <div class="cmd"><pre><code>docker build -t api:1 -f src/Api/Dockerfile .</code></pre><div class="what">Dockerfile en subcarpeta, contexto en la raíz (caso .NET).</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <a href="02-comandos.html">← Comandos CLI</a>
+    <a href="04-compose.html">Siguiente: Docker Compose →</a>
+  </footer>
+</main>
+</body>
+</html>

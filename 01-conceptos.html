@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Conceptos de Docker con diagramas: imagen, contenedor, ciclo de vida, puertos, redes y volúmenes.">
+<meta name="theme-color" content="#1d63ed">
+<title>Docker · Conceptos</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B3%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="conceptos">
+<header class="topbar"></header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker>
+    <marker id="ah-img" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-img"/></marker>
+    <marker id="ah-cont" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-cont"/></marker>
+    <marker id="ah-net" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-net"/></marker>
+    <marker id="ah-vol" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-vol"/></marker>
+    <marker id="ah-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-bad"/></marker>
+    <marker id="ah-file" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-file"/></marker>
+  </defs>
+</svg>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow">Cheatsheet 01</span>
+    <h1>Conceptos clave de Docker</h1>
+    <p class="lead">Las piezas y cómo se conectan: imagen, contenedor, puertos, redes y volúmenes. Si entendés estos diagramas, los comandos se explican solos.</p>
+    <nav class="toc">
+      <a href="#flujo">Flujo general</a>
+      <a href="#glosario">Glosario</a>
+      <a href="#ciclo">Ciclo de vida</a>
+      <a href="#puertos">Puertos</a>
+      <a href="#redes">Redes</a>
+      <a href="#volumenes">Volúmenes</a>
+      <a href="#responsabilidades">Dockerfile vs Compose</a>
+    </nav>
+  </div>
+
+  <!-- ================= FLUJO ================= -->
+  <section class="block" id="flujo">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-img)">1</div>
+      <div class="titles"><h2>El flujo general</h2><p>De una receta (o de Docker Hub) a un proceso corriendo.</p></div>
+    </div>
+
+    <div class="diagram">
+      <div class="svg-scroll">
+      <svg viewBox="0 0 1000 285" role="img" aria-label="Docker Hub y Dockerfile producen una imagen; la imagen crea un contenedor que luego se inicia">
+        <!-- Hub -->
+        <rect x="20" y="28" width="175" height="74" rx="12" class="d-plain"/>
+        <text x="107" y="60" text-anchor="middle" class="d-title">Docker Hub</text>
+        <text x="107" y="80" text-anchor="middle" class="d-sub">registro de imágenes</text>
+        <!-- Dockerfile -->
+        <rect x="20" y="186" width="175" height="74" rx="12" class="d-file"/>
+        <text x="107" y="218" text-anchor="middle" class="d-title">Dockerfile</text>
+        <text x="107" y="238" text-anchor="middle" class="d-sub">la receta de tu app</text>
+        <!-- Imagen -->
+        <rect x="325" y="104" width="175" height="84" rx="12" class="d-img"/>
+        <text x="412" y="138" text-anchor="middle" class="d-title">Imagen</text>
+        <text x="412" y="158" text-anchor="middle" class="d-sub">plantilla (solo lectura)</text>
+        <text x="412" y="176" text-anchor="middle" class="d-lbl">node:18 · mongo</text>
+        <!-- Creado -->
+        <rect x="610" y="104" width="150" height="84" rx="12" class="d-cont" style="fill-opacity:.55"/>
+        <text x="685" y="138" text-anchor="middle" class="d-title">Contenedor</text>
+        <text x="685" y="158" text-anchor="middle" class="d-sub">creado (detenido)</text>
+        <text x="685" y="176" text-anchor="middle" class="d-lbl">Created</text>
+        <!-- Corriendo -->
+        <rect x="845" y="104" width="140" height="84" rx="12" class="d-cont"/>
+        <text x="915" y="138" text-anchor="middle" class="d-title">Contenedor</text>
+        <text x="915" y="158" text-anchor="middle" class="d-sub">corriendo</text>
+        <text x="915" y="176" text-anchor="middle" class="d-lbl">Up</text>
+
+        <!-- flechas -->
+        <path d="M195,65 C262,65 258,132 321,132" class="d-line s-img" marker-end="url(#ah-img)"/>
+        <text x="204" y="54" class="d-lbl">docker pull</text>
+        <path d="M195,223 C262,223 258,160 321,160" class="d-line s-file" marker-end="url(#ah-file)"/>
+        <text x="204" y="250" class="d-lbl">docker build</text>
+        <path d="M500,146 L606,146" class="d-line s-cont" marker-end="url(#ah-cont)"/>
+        <text x="553" y="136" text-anchor="middle" class="d-lbl">docker create</text>
+        <path d="M760,146 L841,146" class="d-line s-cont" marker-end="url(#ah-cont)"/>
+        <text x="802" y="136" text-anchor="middle" class="d-lbl">start</text>
+
+        <!-- docker run -->
+        <path d="M325,206 L325,220 L985,220 L985,206" class="d-line s-comp"/>
+        <text x="655" y="248" text-anchor="middle" class="d-code" style="font-weight:700"><tspan class="f-comp">docker run</tspan> = pull (si no la tenés) + create + start</text>
+        <text x="655" y="270" text-anchor="middle" class="d-sub">una imagen → muchos contenedores (como una clase → muchos objetos)</text>
+      </svg>
+      </div>
+      <div class="legend">
+        <span class="t-file"><i></i>archivo de definición</span>
+        <span class="t-img"><i></i>imagen</span>
+        <span class="t-cont"><i></i>contenedor</span>
+        <span class="t-comp"><i></i>atajo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GLOSARIO ================= -->
+  <section class="block" id="glosario">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-file)">2</div>
+      <div class="titles"><h2>Glosario rápido</h2><p>Una línea para cada concepto.</p></div>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))">
+      <div class="card t-img">
+        <span class="tag">Imagen</span>
+        <h3>Imagen</h3>
+        <p>Plantilla inmutable con SO base + dependencias + tu código. Se identifica como <code>nombre:tag</code>.</p>
+        <ul>
+          <li><code>node:18</code>, <code>mongo:latest</code>, <code>miapp:1</code></li>
+          <li>Sin tag ⇒ se asume <code>:latest</code></li>
+        </ul>
+      </div>
+      <div class="card t-cont">
+        <span class="tag">Contenedor</span>
+        <h3>Contenedor</h3>
+        <p>Una instancia en ejecución de una imagen. Tiene su propio sistema de archivos, red y procesos.</p>
+        <ul>
+          <li>Se referencia por <b>ID</b> (alcanzan los primeros caracteres) o por <b>nombre</b></li>
+          <li>Si lo borrás, se pierde lo que no esté en un volumen</li>
+        </ul>
+      </div>
+      <div class="card t-file">
+        <span class="tag">Archivo</span>
+        <h3>Dockerfile</h3>
+        <p>Receta paso a paso para <b>construir una imagen</b> propia (<code>FROM</code>, <code>COPY</code>, <code>RUN</code>, <code>CMD</code>…).</p>
+        <ul><li>Se usa con <code>docker build</code></li></ul>
+      </div>
+      <div class="card t-comp">
+        <span class="tag">Archivo</span>
+        <h3>docker-compose.yml</h3>
+        <p>Define <b>varios contenedores juntos</b>: cómo se construyen, puertos, variables, volúmenes y redes.</p>
+        <ul><li>Se usa con <code>docker compose up</code> / <code>down</code></li></ul>
+      </div>
+      <div class="card t-net">
+        <span class="tag">Red</span>
+        <h3>Network</h3>
+        <p>Permite que los contenedores se vean entre sí <b>usando su nombre como hostname</b>.</p>
+        <ul><li>Compose crea una red automáticamente para todos sus servicios</li></ul>
+      </div>
+      <div class="card t-vol">
+        <span class="tag">Volumen</span>
+        <h3>Volume</h3>
+        <p>Almacenamiento que <b>sobrevive al contenedor</b>. Ideal para datos de bases de datos.</p>
+        <ul>
+          <li><b>Nombrado</b>: <code>mongo-data:/data/db</code></li>
+          <li><b>Bind mount</b>: <code>.:/home/app</code> (carpeta de tu PC)</li>
+        </ul>
+      </div>
+      <div class="card t-cont">
+        <span class="tag">Puerto</span>
+        <h3>Mapeo de puertos</h3>
+        <p>Expone un puerto del contenedor en tu PC: <code>-p HOST:CONTENEDOR</code>.</p>
+        <ul><li><code>-p 8080:3000</code> ⇒ abrís <code>localhost:8080</code>, la app escucha en 3000</li></ul>
+      </div>
+      <div class="card t-img">
+        <span class="tag">Registro</span>
+        <h3>Registry / Docker Hub</h3>
+        <p>Servidor donde viven las imágenes. <code>docker pull</code> baja de ahí; <code>docker push</code> sube.</p>
+      </div>
+      <div class="card t-file">
+        <span class="tag">Build</span>
+        <h3>Build context</h3>
+        <p>La carpeta que le pasás a <code>docker build</code> (el <code>.</code> final). <code>COPY</code> solo puede leer archivos <b>dentro</b> de esa carpeta.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CICLO DE VIDA ================= -->
+  <section class="block" id="ciclo">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-cont)">3</div>
+      <div class="titles"><h2>Ciclo de vida de un contenedor</h2><p>Qué comando lo lleva de un estado a otro.</p></div>
+    </div>
+    <div class="diagram">
+      <div class="svg-scroll">
+      <svg viewBox="0 0 1000 300" role="img" aria-label="Estados del contenedor: created, running, paused, exited, removed">
+        <!-- estados -->
+        <rect x="30" y="100" width="160" height="64" rx="32" class="d-plain"/>
+        <text x="110" y="128" text-anchor="middle" class="d-title">created</text>
+        <text x="110" y="148" text-anchor="middle" class="d-sub">docker create</text>
+
+        <rect x="320" y="100" width="160" height="64" rx="32" class="d-cont"/>
+        <text x="400" y="128" text-anchor="middle" class="d-title">running</text>
+        <text x="400" y="148" text-anchor="middle" class="d-sub">docker ps</text>
+
+        <rect x="320" y="222" width="160" height="56" rx="28" class="d-vol"/>
+        <text x="400" y="249" text-anchor="middle" class="d-title">paused</text>
+        <text x="400" y="267" text-anchor="middle" class="d-sub">congelado en memoria</text>
+
+        <rect x="610" y="100" width="160" height="64" rx="32" class="d-box"/>
+        <text x="690" y="128" text-anchor="middle" class="d-title">exited</text>
+        <text x="690" y="148" text-anchor="middle" class="d-sub">docker ps -a</text>
+
+        <rect x="860" y="100" width="120" height="64" rx="32" class="d-bad"/>
+        <text x="920" y="128" text-anchor="middle" class="d-title">removed</text>
+        <text x="920" y="148" text-anchor="middle" class="d-sub">ya no existe</text>
+
+        <!-- created -> running -->
+        <path d="M190,132 L316,132" class="d-line s-cont" marker-end="url(#ah-cont)"/>
+        <text x="253" y="122" text-anchor="middle" class="d-lbl">start</text>
+        <!-- running -> exited -->
+        <path d="M480,118 L606,118" class="d-line" marker-end="url(#ah)"/>
+        <text x="543" y="108" text-anchor="middle" class="d-lbl">stop</text>
+        <!-- exited -> running -->
+        <path d="M610,148 L484,148" class="d-line s-cont" marker-end="url(#ah-cont)"/>
+        <text x="547" y="168" text-anchor="middle" class="d-lbl">start / restart</text>
+        <!-- running <-> paused -->
+        <path d="M385,164 L385,218" class="d-line s-vol" marker-end="url(#ah-vol)"/>
+        <text x="377" y="196" text-anchor="end" class="d-lbl">pause</text>
+        <path d="M415,222 L415,168" class="d-line s-vol" marker-end="url(#ah-vol)"/>
+        <text x="423" y="196" class="d-lbl">unpause</text>
+        <!-- exited -> removed -->
+        <path d="M770,132 L856,132" class="d-line s-bad" marker-end="url(#ah-bad)"/>
+        <text x="813" y="122" text-anchor="middle" class="d-lbl">rm</text>
+        <!-- running -> removed (forzado) -->
+        <path d="M400,100 C400,30 920,30 920,96" class="d-line s-bad" style="stroke-dasharray:6 5" marker-end="url(#ah-bad)"/>
+        <text x="660" y="32" text-anchor="middle" class="d-lbl">rm -f  (detiene y borra de una)</text>
+        <!-- run -->
+        <path d="M110,100 C110,50 300,58 352,98" class="d-line s-cont" style="stroke-dasharray:3 4" marker-end="url(#ah-cont)"/>
+        <text x="150" y="62" class="d-lbl">run = create + start</text>
+      </svg>
+      </div>
+      <div class="callout warn"><span class="ico">!</span><p><b>Ojo:</b> <code>docker stop</code> <b>detiene</b> el contenedor (envía SIGTERM, el proceso termina). Para <b>pausar</b> de verdad existe <code>docker pause</code>. Un contenedor detenido sigue existiendo hasta que hacés <code>docker rm</code>.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= PUERTOS ================= -->
+  <section class="block" id="puertos">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-cont)">4</div>
+      <div class="titles"><h2>Mapeo de puertos</h2><p><code>-p HOST:CONTENEDOR</code> — siempre primero tu PC, después el contenedor.</p></div>
+    </div>
+    <div class="diagram">
+      <div class="svg-scroll">
+      <svg viewBox="0 0 1000 250" role="img" aria-label="El puerto 3000 del host se redirige al puerto 3000 del contenedor">
+        <rect x="16" y="20" width="440" height="200" rx="16" class="d-area"/>
+        <text x="36" y="48" class="d-title">Tu PC (host)</text>
+
+        <rect x="40" y="88" width="170" height="64" rx="12" class="d-plain"/>
+        <text x="125" y="116" text-anchor="middle" class="d-title">Navegador</text>
+        <text x="125" y="136" text-anchor="middle" class="d-sub">Postman · curl</text>
+
+        <rect x="270" y="100" width="160" height="40" rx="20" class="d-img"/>
+        <text x="350" y="125" text-anchor="middle" class="d-code" style="font-weight:700">localhost:3000</text>
+        <text x="350" y="166" text-anchor="middle" class="d-sub">puerto que abrís en tu PC</text>
+        <path d="M210,120 L266,120" class="d-line" marker-end="url(#ah)"/>
+
+        <rect x="560" y="20" width="424" height="200" rx="16" class="d-cont" style="fill-opacity:.35"/>
+        <text x="580" y="48" class="d-title">Contenedor <tspan class="d-code" style="font-weight:400">chanchito</tspan></text>
+
+        <rect x="586" y="100" width="110" height="40" rx="20" class="d-cont"/>
+        <text x="641" y="125" text-anchor="middle" class="d-code" style="font-weight:700">:3000</text>
+        <text x="641" y="166" text-anchor="middle" class="d-sub">donde escucha la app</text>
+
+        <rect x="748" y="84" width="215" height="72" rx="12" class="d-plain"/>
+        <text x="855" y="113" text-anchor="middle" class="d-code" style="font-weight:700">node app.js</text>
+        <text x="855" y="135" text-anchor="middle" class="d-lbl">app.listen(3000)</text>
+        <path d="M696,120 L744,120" class="d-line s-cont" marker-end="url(#ah-cont)"/>
+
+        <path d="M430,120 L582,120" class="d-line s-img" style="stroke-width:2.6" marker-end="url(#ah-img)"/>
+        <text x="506" y="106" text-anchor="middle" class="d-code" style="font-weight:700">-p 3000:3000</text>
+        <text x="506" y="144" text-anchor="middle" class="d-lbl">HOST:CONT</text>
+      </svg>
+      </div>
+      <div class="grid cols-3" style="margin-top:12px">
+        <div class="callout info"><span class="ico">i</span><p><code>-p 8080:3000</code> ⇒ entrás por <code>localhost:8080</code> y llega al 3000 del contenedor.</p></div>
+        <div class="callout info"><span class="ico">i</span><p><code>EXPOSE 3000</code> en el Dockerfile es <b>solo informativo</b>: no publica nada. Quien publica es <code>-p</code> o <code>ports:</code>.</p></div>
+        <div class="callout warn"><span class="ico">!</span><p>Entre contenedores de la misma red <b>no hace falta</b> mapear puertos: se hablan directo por el puerto interno.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= REDES ================= -->
+  <section class="block" id="redes">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-net)">5</div>
+      <div class="titles"><h2>Redes: cómo se habla la app con la base de datos</h2><p>En una misma red, el <b>nombre del contenedor/servicio</b> funciona como hostname.</p></div>
+    </div>
+    <div class="diagram">
+      <div class="svg-scroll">
+      <svg viewBox="0 0 1000 320" role="img" aria-label="chanchito y monguito en la misma red; chanchito se conecta a monguito:27017">
+        <rect x="170" y="24" width="810" height="226" rx="18" class="d-net"/>
+        <text x="194" y="54" class="d-title"><tspan class="f-net">red:</tspan> mired <tspan class="d-sub">(o la red automática de compose: &lt;carpeta&gt;_default)</tspan></text>
+
+        <rect x="16" y="112" width="120" height="64" rx="12" class="d-plain"/>
+        <text x="76" y="140" text-anchor="middle" class="d-title">Tu PC</text>
+        <text x="76" y="160" text-anchor="middle" class="d-sub">localhost</text>
+        <path d="M136,144 L236,144" class="d-line" marker-end="url(#ah)"/>
+        <text x="205" y="134" text-anchor="middle" class="d-lbl">:3000</text>
+
+        <rect x="240" y="96" width="240" height="96" rx="14" class="d-cont"/>
+        <text x="360" y="130" text-anchor="middle" class="d-title">chanchito</text>
+        <text x="360" y="152" text-anchor="middle" class="d-sub">node app.js · :3000</text>
+        <text x="360" y="174" text-anchor="middle" class="d-lbl">mongoose.connect(...)</text>
+
+        <rect x="700" y="96" width="240" height="96" rx="14" class="d-cont"/>
+        <text x="820" y="130" text-anchor="middle" class="d-title">monguito</text>
+        <text x="820" y="152" text-anchor="middle" class="d-sub">imagen mongo · :27017</text>
+        <text x="820" y="174" text-anchor="middle" class="d-lbl">MONGO_INITDB_ROOT_*</text>
+
+        <path d="M480,144 L696,144" class="d-line s-net" style="stroke-width:2.6" marker-end="url(#ah-net)"/>
+        <text x="588" y="132" text-anchor="middle" class="d-code" style="font-weight:700">monguito:27017</text>
+        <text x="588" y="166" text-anchor="middle" class="d-lbl">DNS interno de Docker</text>
+
+        <text x="575" y="222" text-anchor="middle" class="d-sub">✗ dentro del contenedor, <tspan class="d-code">localhost</tspan> es el propio contenedor, no tu PC ni Mongo</text>
+
+        <text x="500" y="290" text-anchor="middle" class="d-code" style="font-size:13.5px">mongodb://mati:&lt;password&gt;@<tspan class="f-net" style="font-weight:700">monguito</tspan>:27017/miapp?authSource=admin</text>
+        <text x="500" y="310" text-anchor="middle" class="d-sub">el host del connection string = nombre del contenedor (o del servicio en compose)</text>
+      </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= VOLUMENES ================= -->
+  <section class="block" id="volumenes">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-vol)">6</div>
+      <div class="titles"><h2>Volúmenes: persistir y compartir archivos</h2><p>Dos sabores con la misma sintaxis <code>ORIGEN:DESTINO-EN-CONTENEDOR</code>.</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="diagram">
+        <h3>Volumen nombrado</h3>
+        <p>Docker lo gestiona. Sobrevive a <code>docker rm</code> y a <code>docker compose down</code>.</p>
+        <div class="svg-scroll">
+        <svg viewBox="0 0 520 250" class="small" role="img" aria-label="volumen mongo-data montado en /data/db del contenedor monguito">
+          <rect x="20" y="30" width="210" height="150" rx="14" class="d-cont"/>
+          <text x="125" y="62" text-anchor="middle" class="d-title">monguito</text>
+          <rect x="45" y="88" width="160" height="40" rx="8" class="d-plain"/>
+          <text x="125" y="113" text-anchor="middle" class="d-code" style="font-weight:700">/data/db</text>
+          <text x="125" y="160" text-anchor="middle" class="d-sub">aquí Mongo guarda todo</text>
+
+          <!-- cilindro -->
+          <path d="M330,62 a75,16 0 0 0 150,0 v100 a75,16 0 0 1 -150,0 z" class="d-vol"/>
+          <ellipse cx="405" cy="62" rx="75" ry="16" class="d-vol"/>
+          <text x="405" y="122" text-anchor="middle" class="d-title">mongo-data</text>
+          <text x="405" y="142" text-anchor="middle" class="d-sub">gestionado por Docker</text>
+
+          <path d="M209,108 L326,108" class="d-line s-vol" style="stroke-width:2.4" marker-start="url(#ah-vol)" marker-end="url(#ah-vol)"/>
+          <text x="268" y="210" text-anchor="middle" class="d-code" style="font-weight:700">- mongo-data:/data/db</text>
+          <text x="268" y="232" text-anchor="middle" class="d-lbl">nombre-volumen : ruta-en-contenedor</text>
+        </svg>
+        </div>
+      </div>
+      <div class="diagram">
+        <h3>Bind mount (carpeta de tu PC)</h3>
+        <p>Tu carpeta se “ve” dentro del contenedor. Ideal para <b>desarrollo</b>: editás y el cambio está al instante.</p>
+        <div class="svg-scroll">
+        <svg viewBox="0 0 520 250" class="small" role="img" aria-label="carpeta del proyecto montada en /home/app del contenedor chanchito">
+          <!-- carpeta -->
+          <path d="M20,52 h70 l14,16 h120 a8,8 0 0 1 8,8 v96 a8,8 0 0 1 -8,8 h-196 a8,8 0 0 1 -8,-8 v-112 a8,8 0 0 1 8,-8 z" class="d-file"/>
+          <text x="126" y="112" text-anchor="middle" class="d-title">./ (tu proyecto)</text>
+          <text x="126" y="134" text-anchor="middle" class="d-lbl">app.js package.json …</text>
+          <text x="126" y="156" text-anchor="middle" class="d-sub">en tu PC</text>
+
+          <rect x="300" y="40" width="200" height="140" rx="14" class="d-cont"/>
+          <text x="400" y="72" text-anchor="middle" class="d-title">chanchito</text>
+          <rect x="325" y="96" width="150" height="40" rx="8" class="d-plain"/>
+          <text x="400" y="121" text-anchor="middle" class="d-code" style="font-weight:700">/home/app</text>
+          <text x="400" y="162" text-anchor="middle" class="d-sub">nodemon reinicia solo</text>
+
+          <path d="M236,116 L321,116" class="d-line s-file" style="stroke-width:2.4" marker-start="url(#ah-file)" marker-end="url(#ah-file)"/>
+          <text x="260" y="210" text-anchor="middle" class="d-code" style="font-weight:700">- .:/home/app</text>
+          <text x="260" y="232" text-anchor="middle" class="d-lbl">carpeta-host : ruta-en-contenedor</text>
+        </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="card t-vol" style="margin-top:16px">
+      <h3>¿Dónde guarda los datos cada base de datos?</h3>
+      <p>La ruta de destino del volumen tiene que ser exactamente esta, si no los datos se pierden al recrear el contenedor.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Motor</th><th>Ruta dentro del contenedor</th><th>Ejemplo en compose</th></tr></thead>
+          <tbody>
+            <tr><td>MongoDB</td><td><code>/data/db</code></td><td><code>- mongo-data:/data/db</code></td></tr>
+            <tr><td>MySQL / MariaDB</td><td><code>/var/lib/mysql</code></td><td><code>- mysql-data:/var/lib/mysql</code></td></tr>
+            <tr><td>PostgreSQL</td><td><code>/var/lib/postgresql/data</code></td><td><code>- pg-data:/var/lib/postgresql/data</code></td></tr>
+            <tr><td>SQL Server</td><td><code>/var/opt/mssql</code></td><td><code>- mssql-data:/var/opt/mssql</code></td></tr>
+            <tr><td>Redis</td><td><code>/data</code></td><td><code>- redis-data:/data</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RESPONSABILIDADES ================= -->
+  <section class="block" id="responsabilidades">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-comp)">7</div>
+      <div class="titles"><h2>¿Qué va en el Dockerfile y qué en el compose?</h2><p>Están separados a propósito.</p></div>
+    </div>
+    <div class="vs">
+      <div class="card t-file">
+        <span class="tag">Dockerfile</span>
+        <h3>Cómo se <u>construye</u> UNA imagen</h3>
+        <ul>
+          <li>Imagen base (<code>FROM</code>)</li>
+          <li>Copiar código, instalar dependencias, compilar</li>
+          <li>Qué comando arranca la app (<code>CMD</code> / <code>ENTRYPOINT</code>)</li>
+          <li>Es reusable solo: <code>docker build -t miapp .</code></li>
+          <li><b>No sabe</b> de puertos externos, variables de entorno ni de otros contenedores</li>
+        </ul>
+      </div>
+      <div class="card t-comp">
+        <span class="tag">docker-compose.yml</span>
+        <h3>Cómo se <u>orquestan</u> VARIOS contenedores</h3>
+        <ul>
+          <li>Qué servicios hay (app, db, migrator, frontend…)</li>
+          <li><code>build</code> (context + dockerfile) o <code>image</code></li>
+          <li><code>ports</code>, <code>environment</code>, <code>volumes</code>, <code>depends_on</code></li>
+          <li>La red común para que se hablen por nombre</li>
+          <li>Todo se levanta con <code>docker compose up</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Docker Cheatsheets · basado en tus notas y el proyecto <code>pruebas-docker</code></span>
+    <a href="02-comandos.html">Siguiente: Comandos CLI →</a>
+  </footer>
+</main>
+</body>
+</html>

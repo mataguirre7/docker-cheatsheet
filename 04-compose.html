@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Docker Compose: comandos, claves del YAML, compose de producción y desarrollo, variables .env y varios servicios.">
+<meta name="theme-color" content="#1d63ed">
+<title>Docker · Compose</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B3%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="compose">
+<header class="topbar"></header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker>
+    <marker id="ah-net" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-net"/></marker>
+    <marker id="ah-vol" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-vol"/></marker>
+    <marker id="ah-file" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-file"/></marker>
+    <marker id="ah-comp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-comp"/></marker>
+  </defs>
+</svg>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow">Cheatsheet 04</span>
+    <h1>Docker Compose</h1>
+    <p class="lead">Un archivo YAML que describe <b>todos los contenedores</b> de tu proyecto y cómo se conectan. Un solo comando lo levanta todo.</p>
+    <nav class="toc">
+      <a href="#que-crea">Qué crea</a>
+      <a href="#comandos">Comandos</a>
+      <a href="#claves">Claves del YAML</a>
+      <a href="#prod">Compose producción</a>
+      <a href="#dev">Compose desarrollo</a>
+      <a href="#diferencias">Prod vs Dev</a>
+      <a href="#env">Variables y .env</a>
+      <a href="#multi">Varios servicios</a>
+    </nav>
+  </div>
+
+  <!-- ================= QUE CREA ================= -->
+  <section class="block" id="que-crea">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-comp)">1</div>
+      <div class="titles"><h2>Qué pasa con <code>docker compose up</code></h2><p>Del YAML a contenedores, red y volumen.</p></div>
+    </div>
+    <div class="diagram">
+      <div class="svg-scroll">
+      <svg viewBox="0 0 1000 360" role="img" aria-label="docker-compose.yml crea una red con chanchito y monguito, y un volumen mongo-data">
+        <!-- yaml -->
+        <rect x="14" y="20" width="250" height="320" rx="14" class="d-comp" style="fill-opacity:.5"/>
+        <text x="30" y="48" class="d-title">docker-compose.yml</text>
+        <text x="30" y="80" class="d-code"><tspan class="f-comp" style="font-weight:700">services:</tspan></text>
+        <text x="46" y="102" class="d-code">chanchito:</text>
+        <text x="62" y="122" class="d-lbl">build: .</text>
+        <text x="62" y="140" class="d-lbl">ports: 3000:3000</text>
+        <text x="46" y="166" class="d-code">monguito:</text>
+        <text x="62" y="186" class="d-lbl">image: mongo</text>
+        <text x="62" y="204" class="d-lbl">ports: 27017:27017</text>
+        <text x="62" y="222" class="d-lbl">environment: …</text>
+        <text x="62" y="240" class="d-lbl">volumes: mongo-data:…</text>
+        <text x="30" y="272" class="d-code"><tspan class="f-comp" style="font-weight:700">volumes:</tspan></text>
+        <text x="46" y="294" class="d-code">mongo-data:</text>
+
+        <path d="M264,180 L318,180" class="d-line s-comp" style="stroke-width:2.6" marker-end="url(#ah-comp)"/>
+        <text x="291" y="168" text-anchor="middle" class="d-lbl">up</text>
+
+        <!-- red -->
+        <rect x="324" y="20" width="662" height="250" rx="18" class="d-net"/>
+        <text x="344" y="48" class="d-title"><tspan class="f-net">red automática:</tspan> pruebas-docker_default</text>
+
+        <rect x="345" y="80" width="235" height="110" rx="14" class="d-cont"/>
+        <text x="462" y="110" text-anchor="middle" class="d-title">chanchito</text>
+        <text x="462" y="132" text-anchor="middle" class="d-sub">imagen construida del Dockerfile</text>
+        <text x="462" y="152" text-anchor="middle" class="d-lbl">pruebas-docker-chanchito</text>
+        <text x="462" y="176" text-anchor="middle" class="d-lbl">:3000</text>
+
+        <rect x="735" y="80" width="230" height="110" rx="14" class="d-cont"/>
+        <text x="850" y="110" text-anchor="middle" class="d-title">monguito</text>
+        <text x="850" y="132" text-anchor="middle" class="d-sub">imagen oficial mongo</text>
+        <text x="850" y="152" text-anchor="middle" class="d-lbl">/data/db</text>
+        <text x="850" y="176" text-anchor="middle" class="d-lbl">:27017</text>
+
+        <path d="M580,135 L731,135" class="d-line s-net" style="stroke-width:2.4" marker-end="url(#ah-net)"/>
+        <text x="656" y="124" text-anchor="middle" class="d-lbl">monguito:27017</text>
+
+        <text x="560" y="240" text-anchor="middle" class="d-sub">cada servicio se alcanza por su <tspan style="font-weight:700" class="f-text">nombre de servicio</tspan> — no hace falta <tspan class="d-code">links</tspan></text>
+
+        <!-- volumen -->
+        <path d="M785,292 a65,12 0 0 0 130,0 v40 a65,12 0 0 1 -130,0 z" class="d-vol"/>
+        <ellipse cx="850" cy="292" rx="65" ry="12" class="d-vol"/>
+        <text x="850" y="324" text-anchor="middle" class="d-code" style="font-weight:700">mongo-data</text>
+        <path d="M850,190 L850,276" class="d-line s-vol" style="stroke-width:2.2" marker-end="url(#ah-vol)"/>
+        <text x="922" y="312" class="d-lbl">volumen</text>
+
+        <!-- puertos host -->
+        <text x="475" y="320" text-anchor="middle" class="d-sub">tu PC → <tspan class="d-code">localhost:3000</tspan> · <tspan class="d-code">localhost:27017</tspan></text>
+      </svg>
+      </div>
+      <div class="callout info"><span class="ico">i</span><p>El prefijo <code>pruebas-docker_</code> sale del <b>nombre de la carpeta</b> (nombre del proyecto). Cambialo con <code>-p &lt;nombre&gt;</code> o con <code>name:</code> arriba del YAML.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= COMANDOS ================= -->
+  <section class="block" id="comandos">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-comp)">2</div>
+      <div class="titles"><h2>Comandos de compose</h2><p>Se ejecutan en la carpeta del <code>docker-compose.yml</code>.</p></div>
+    </div>
+    <div class="grid">
+      <div class="card t-comp">
+        <h3>Levantar y bajar</h3>
+        <div class="cmd"><pre><code>docker compose up</code></pre><div class="what">Construye (si hace falta), crea y arranca todo. Logs en la terminal.</div></div>
+        <div class="cmd"><pre><code>docker compose up -d</code></pre><div class="what">En segundo plano.</div></div>
+        <div class="cmd"><pre><code>docker compose up --build</code></pre><div class="what"><b>Fuerza el rebuild</b> de las imágenes (cuando cambiaste el Dockerfile o el código en prod).</div></div>
+        <div class="cmd"><pre><code>docker compose down</code></pre><div class="what">Detiene y <b>borra</b> contenedores y red. Los volúmenes quedan.</div></div>
+        <div class="cmd"><pre><code>docker compose down -v</code></pre><div class="what">Además borra los volúmenes (<b>se pierden los datos de la DB</b>).</div></div>
+      </div>
+      <div class="card t-comp">
+        <h3>Usar otro archivo</h3>
+        <div class="cmd"><pre><code>docker compose -f docker-compose-dev.yml up</code></pre><div class="what">Compose custom: <code>-f</code> va <b>antes</b> de <code>up</code>.</div></div>
+        <div class="cmd"><pre><code>docker compose -f docker-compose-dev.yml down</code></pre><div class="what">Para bajarlo usá el mismo <code>-f</code>.</div></div>
+        <div class="cmd"><pre><code>docker compose -f docker-compose.yml -f docker-compose.override.yml up</code></pre><div class="what">Combinar archivos (el segundo pisa al primero).</div></div>
+        <div class="cmd"><pre><code>docker compose config</code></pre><div class="what">Muestra el YAML final resuelto (con variables). Ideal para detectar errores.</div></div>
+      </div>
+      <div class="card t-comp">
+        <h3>Operar servicios</h3>
+        <div class="cmd"><pre><code>docker compose ps</code></pre><div class="what">Estado de los servicios del proyecto.</div></div>
+        <div class="cmd"><pre><code>docker compose logs -f chanchito</code></pre><div class="what">Logs de un servicio (sin nombre: de todos).</div></div>
+        <div class="cmd"><pre><code>docker compose exec chanchito sh</code></pre><div class="what">Terminal dentro de un servicio (usa el <b>nombre del servicio</b>).</div></div>
+        <div class="cmd"><pre><code>docker compose restart chanchito</code></pre><div class="what">Reiniciar uno.</div></div>
+        <div class="cmd"><pre><code>docker compose stop
+docker compose start</code></pre><div class="what">Detener / arrancar sin borrar.</div></div>
+        <div class="cmd"><pre><code>docker compose build chanchito</code></pre><div class="what">Solo construir la imagen.</div></div>
+      </div>
+    </div>
+    <div class="callout warn"><span class="ico">!</span><p><code>docker compose</code> (con espacio) es la versión actual integrada en Docker. <code>docker-compose</code> (con guion) es la v1, ya discontinuada.</p></div>
+  </section>
+
+  <!-- ================= CLAVES ================= -->
+  <section class="block" id="claves">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-file)">3</div>
+      <div class="titles"><h2>Claves del YAML</h2><p>Lo que va dentro de cada servicio.</p></div>
+    </div>
+    <div class="card t-file wide">
+      <h3>Referencia de claves</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Clave</th><th>Para qué</th><th>Ejemplo</th></tr></thead>
+          <tbody>
+            <tr><td><code>services</code></td><td>Los contenedores a crear (uno por clave)</td><td><code>services: chanchito: …</code></td></tr>
+            <tr><td><code>build</code></td><td>Construir desde un Dockerfile. Forma corta = carpeta; forma larga = <code>context</code> + <code>dockerfile</code></td><td><code>build: .</code></td></tr>
+            <tr><td><code>image</code></td><td>Usar una imagen ya hecha (Docker Hub)</td><td><code>image: mongo:7</code></td></tr>
+            <tr><td><code>ports</code></td><td>Mapeo <b>"HOST:CONTENEDOR"</b> (entre comillas)</td><td><code>- "3000:3000"</code></td></tr>
+            <tr><td><code>environment</code></td><td>Variables de entorno</td><td><code>- NODE_ENV=production</code></td></tr>
+            <tr><td><code>env_file</code></td><td>Variables desde archivo</td><td><code>env_file: .env</code></td></tr>
+            <tr><td><code>volumes</code></td><td>Volúmenes nombrados o bind mounts</td><td><code>- mongo-data:/data/db</code> · <code>- .:/home/app</code></td></tr>
+            <tr><td><code>depends_on</code></td><td>Orden de arranque (este arranca después de…)</td><td><code>depends_on: [monguito]</code></td></tr>
+            <tr><td><code>links</code></td><td><b>Legacy</b>. Ya no hace falta: la red de compose resuelve por nombre</td><td><code>- monguito</code></td></tr>
+            <tr><td><code>restart</code></td><td>Reinicio automático</td><td><code>restart: unless-stopped</code></td></tr>
+            <tr><td><code>command</code></td><td>Pisa el <code>CMD</code> del Dockerfile</td><td><code>command: npm run dev</code></td></tr>
+            <tr><td><code>container_name</code></td><td>Nombre fijo del contenedor</td><td><code>container_name: monguito</code></td></tr>
+            <tr><td><code>networks</code></td><td>Redes personalizadas (opcional)</td><td><code>networks: [backend]</code></td></tr>
+            <tr><td><code>volumes</code> (raíz)</td><td>Declara los volúmenes nombrados</td><td><code>volumes: mongo-data:</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout warn"><span class="ico">!</span><p><code>version: "3.9"</code> al principio del archivo es <b>obsoleto</b>: Compose v2 lo ignora y muestra un warning. Podés borrarlo.</p></div>
+      <div class="callout info"><span class="ico">i</span><p><b>YAML usa espacios, nunca tabs.</b> La indentación define la jerarquía; mantené siempre el mismo ancho (2 o 4 espacios).</p></div>
+    </div>
+  </section>
+
+  <!-- ================= PROD ================= -->
+  <section class="block" id="prod">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-img)">4</div>
+      <div class="titles"><h2>Compose de producción</h2><p>La imagen lleva el código adentro (Dockerfile con <code>COPY</code>).</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card t-img">
+        <span class="tag">Comentado</span>
+        <h3>docker-compose.yml</h3>
+        <div class="code-label"><span class="file">docker-compose.yml</span><span>docker compose up</span></div>
+        <pre class="big"><code data-lang="yaml">services:
+
+  # Contenedor de nuestra aplicación
+  chanchito:
+    build: .              # busca el Dockerfile en la carpeta actual
+    ports:
+      - "3000:3000"       # PC:3000 -> contenedor:3000
+    links:
+      - monguito          # (legacy) chanchito habla con monguito
+
+  # Contenedor de MongoDB
+  monguito:
+    image: mongo          # imagen oficial
+    ports:
+      - "27017:27017"
+    environment:          # crea el usuario admin al iniciar
+      - MONGO_INITDB_ROOT_USERNAME=mati
+      - MONGO_INITDB_ROOT_PASSWORD=&lt;password&gt;
+    volumes:
+      - mongo-data:/data/db   # persiste los datos
+      # mysql    -> /var/lib/mysql
+      # postgres -> /var/lib/postgresql/data
+
+# Declaración del volumen nombrado
+volumes:
+  mongo-data:</code></pre>
+      </div>
+      <div class="card t-ok">
+        <span class="tag">Mejorado</span>
+        <h3>Versión recomendada</h3>
+        <div class="code-label"><span class="file">docker-compose.yml</span></div>
+        <pre class="big"><code data-lang="yaml">services:
+  chanchito:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - monguito          # arranca después de mongo
+    environment:
+      - MONGO_URL=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@monguito:27017/miapp?authSource=admin
+    restart: unless-stopped
+
+  monguito:
+    image: mongo:7        # versión fija
+    ports:
+      - "27017:27017"     # opcional: solo si querés entrar con Compass
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:</code></pre>
+        <ul>
+          <li><code>depends_on</code> en vez de <code>links</code></li>
+          <li>Credenciales en <a href="#env">.env</a>, no en el YAML (no se suben a git)</li>
+          <li>En <code>app.js</code>: <code>mongoose.connect(process.env.MONGO_URL)</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEV ================= -->
+  <section class="block" id="dev">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-vol)">5</div>
+      <div class="titles"><h2>Compose de desarrollo</h2><p>Monta tu carpeta en el contenedor: editás y nodemon recarga, <b>sin rebuild</b>.</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card t-vol">
+        <h3>docker-compose-dev.yml</h3>
+        <div class="code-label"><span class="file">docker-compose-dev.yml</span><span>-f docker-compose-dev.yml up</span></div>
+        <pre class="big"><code data-lang="yaml">services:
+  chanchito:
+    build:
+      context: .                  # carpeta usada como contexto
+      dockerfile: Dockerfile.dev  # Dockerfile a usar
+    ports:
+      - "3000:3000"
+    links:
+      - monguito
+    volumes:
+      - .:/home/app               # reemplaza al COPY del Dockerfile
+
+  monguito:
+    image: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mati
+      - MONGO_INITDB_ROOT_PASSWORD=&lt;password&gt;
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:</code></pre>
+      </div>
+      <div class="diagram">
+        <h3>Cómo funciona el bind mount</h3>
+        <p>Antes: <code>COPY . /home/app</code> (copia fija en la imagen). Ahora: <code>.:/home/app</code> (carpeta compartida en vivo).</p>
+        <div class="svg-scroll">
+        <svg viewBox="0 0 520 300" class="small" role="img" aria-label="Guardás app.js en tu PC, el contenedor ve el cambio y nodemon reinicia">
+          <rect x="16" y="20" width="200" height="120" rx="14" class="d-file"/>
+          <text x="116" y="52" text-anchor="middle" class="d-title">Tu PC</text>
+          <text x="116" y="78" text-anchor="middle" class="d-code">./app.js</text>
+          <text x="116" y="104" text-anchor="middle" class="d-sub">editás y guardás</text>
+          <text x="116" y="124" text-anchor="middle" class="d-lbl">Ctrl + S</text>
+
+          <rect x="300" y="20" width="200" height="120" rx="14" class="d-cont"/>
+          <text x="400" y="52" text-anchor="middle" class="d-title">chanchito</text>
+          <text x="400" y="78" text-anchor="middle" class="d-code">/home/app/app.js</text>
+          <text x="400" y="104" text-anchor="middle" class="d-sub">mismo archivo</text>
+
+          <path d="M216,80 L296,80" class="d-line s-file" style="stroke-width:2.4" marker-start="url(#ah-file)" marker-end="url(#ah-file)"/>
+          <text x="256" y="70" text-anchor="middle" class="d-lbl">.:/home/app</text>
+
+          <path d="M400,140 L400,180" class="d-line s-vol" marker-end="url(#ah-vol)"/>
+          <rect x="300" y="184" width="200" height="56" rx="12" class="d-vol"/>
+          <text x="400" y="208" text-anchor="middle" class="d-title">nodemon -L</text>
+          <text x="400" y="228" text-anchor="middle" class="d-sub">detecta el cambio</text>
+          <path d="M400,240 L400,262" class="d-line s-vol" marker-end="url(#ah-vol)"/>
+          <text x="400" y="284" text-anchor="middle" class="d-code" style="font-weight:700">app reiniciada ✓</text>
+
+          <text x="116" y="200" text-anchor="middle" class="d-sub">sin docker build</text>
+          <text x="116" y="220" text-anchor="middle" class="d-sub">sin reiniciar compose</text>
+        </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DIFERENCIAS ================= -->
+  <section class="block" id="diferencias">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-comp)">6</div>
+      <div class="titles"><h2>Producción vs Desarrollo</h2><p>Las diferencias entre tus dos archivos, en una tabla.</p></div>
+    </div>
+    <div class="card t-comp wide">
+      <h3>Comparativa</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Producción</th><th>Desarrollo</th></tr></thead>
+          <tbody>
+            <tr><td>Archivo compose</td><td><code>docker-compose.yml</code></td><td><code>docker-compose-dev.yml</code></td></tr>
+            <tr><td>Dockerfile</td><td><code>Dockerfile</code> (<code>build: .</code>)</td><td><code>Dockerfile.dev</code> (<code>context</code> + <code>dockerfile</code>)</td></tr>
+            <tr><td>Código</td><td>Copiado en la imagen con <code>COPY</code></td><td>Montado con <code>volumes: - .:/home/app</code></td></tr>
+            <tr><td>Arranque</td><td><code>node app.js</code></td><td><code>nodemon -L app.js</code> (recarga automática)</td></tr>
+            <tr><td>Al cambiar código</td><td><code>docker compose up --build</code></td><td>Nada: guardás y listo</td></tr>
+            <tr><td>Levantar</td><td><code>docker compose up</code></td><td><code>docker compose -f docker-compose-dev.yml up</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ENV ================= -->
+  <section class="block" id="env">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--warn)">7</div>
+      <div class="titles"><h2>Variables y archivo .env</h2><p>Saca contraseñas del YAML. Compose lee automáticamente el <code>.env</code> de la misma carpeta.</p></div>
+    </div>
+    <div class="grid cols-3">
+      <div class="card t-warn">
+        <h3>1. Crear .env</h3>
+        <div class="code-label"><span class="file">.env</span><span>agregalo al .gitignore</span></div>
+        <pre><code data-lang="plain">MONGO_USER=mati
+MONGO_PASSWORD=&lt;password&gt;</code></pre>
+      </div>
+      <div class="card t-warn">
+        <h3>2. Usarlas en el compose</h3>
+        <pre><code data-lang="yaml">environment:
+  - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+  - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+# o pasar el archivo entero al contenedor:
+env_file: .env</code></pre>
+      </div>
+      <div class="card t-warn">
+        <h3>3. Verificar</h3>
+        <div class="cmd"><pre><code>docker compose config</code></pre><div class="what">Muestra el YAML con las variables ya reemplazadas.</div></div>
+        <div class="callout info"><span class="ico">i</span><p><code>MONGO_INITDB_ROOT_*</code> solo se aplica la <b>primera vez</b> (con el volumen vacío). Si cambiás la contraseña después, hacé <code>down -v</code> o cambiala dentro de Mongo.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MULTI ================= -->
+  <section class="block" id="multi">
+    <div class="section-head">
+      <div class="num" style="--tone:var(--c-net)">8</div>
+      <div class="titles"><h2>Varios servicios: db · migrator · backend · frontend</h2><p>El patrón de tu proyecto ASP.NET Core: el compose orquesta, cada Dockerfile solo construye.</p></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card t-net">
+        <h3>Esqueleto</h3>
+        <pre class="big"><code data-lang="yaml">services:
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
+
+  migrator:
+    build:
+      context: ./aspnet-core          # TODA la solución
+      dockerfile: src/&lt;Proyecto&gt;.DbMigrator/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy    # espera a que la DB esté lista
+
+  backend:
+    build:
+      context: ./aspnet-core
+      dockerfile: src/&lt;Proyecto&gt;.HttpApi.Host/Dockerfile
+    ports:
+      - "44300:8080"                  # PC:44300 -> contenedor:8080
+    environment:
+      - ConnectionStrings__Default=Host=db;Database=app;Username=postgres;Password=${DB_PASSWORD}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+
+  frontend:
+    build: ./angular
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  pg-data:</code></pre>
+      </div>
+      <div class="card t-net">
+        <h3>Claves de este patrón</h3>
+        <ul>
+          <li><b><code>context</code></b> = qué carpeta ve el Dockerfile. Si el proyecto depende de otros (Domain, Application…), el context tiene que ser la <b>raíz de la solución</b>.</li>
+          <li><b><code>dockerfile</code></b> = ruta al Dockerfile <b>relativa al context</b>.</li>
+          <li><code>depends_on</code> solo ordena el arranque. Para <b>esperar</b> a que algo esté listo usá <code>condition: service_healthy</code> + <code>healthcheck</code>.</li>
+          <li><code>service_completed_successfully</code>: el backend arranca recién cuando el migrator terminó bien.</li>
+          <li>En .NET, <code>__</code> (doble guion bajo) en una variable = <code>:</code> en <code>appsettings.json</code> (<code>ConnectionStrings:Default</code>).</li>
+          <li>El host de la DB en el connection string es el <b>nombre del servicio</b> (<code>Host=db</code>).</li>
+        </ul>
+        <div class="callout tip"><span class="ico">✓</span><p>Regla de oro: <b>el Dockerfile no sabe de puertos externos, variables ni de otros contenedores</b>. Todo eso vive en el compose.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <a href="03-dockerfile.html">← Dockerfile</a>
+    <a href="05-problemas.html">Siguiente: Problemas comunes →</a>
+  </footer>
+</main>
+</body>
+</html>
